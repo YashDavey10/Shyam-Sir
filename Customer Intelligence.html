@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Air India Maharaja Club — AI Customer Intelligence</title>
+<style>
+:root{--bg:#07131b;--panel:#0e2029;--panel2:#132b35;--text:#f5f2e9;--muted:#9db0b6;--line:#24414b;--red:#d71920;--gold:#d6ad5a;--green:#38d996;--cyan:#4fc7d9;--orange:#f0a45b}
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Segoe UI,Arial,sans-serif;background:radial-gradient(circle at 80% 0,#173944 0,#07131b 42%,#050c12 100%);color:var(--text)}
+.app{display:flex;min-height:100vh}.side{width:250px;background:#071017;border-right:1px solid var(--line);padding:22px 14px;position:fixed;height:100vh}
+.brand{font-weight:850;font-size:17px;line-height:1.35;padding:8px 11px 25px}.brand .ai{color:#fff}.brand .mc{color:var(--gold)}
+.nav{display:grid;gap:7px}.nav button{border:0;background:transparent;color:#a9bcc2;text-align:left;padding:12px 13px;border-radius:10px;cursor:pointer;font-size:13px}.nav button:hover,.nav button.active{background:#142a34;color:white}.nav button.active{box-shadow:inset 3px 0 0 var(--red)}
+.main{margin-left:250px;width:calc(100% - 250px);padding:24px 28px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px}.title h1{margin:0;font-size:24px}.title p{margin:6px 0;color:var(--muted);font-size:12px}.live{display:flex;align-items:center;gap:8px;background:#0d3027;border:1px solid #21624e;padding:8px 12px;border-radius:999px;color:#7ff1ba;font-size:11px}.dot{width:8px;height:8px;background:var(--green);border-radius:50%;box-shadow:0 0 12px var(--green)}
+.filters{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:16px}.filters select,.filters input{background:var(--panel);color:white;border:1px solid var(--line);padding:9px 11px;border-radius:8px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.card{background:rgba(14,32,41,.94);border:1px solid var(--line);border-radius:13px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.12)}.kpi .label{color:var(--muted);font-size:11px}.kpi .value{font-size:23px;font-weight:800;margin-top:7px}.delta{font-size:10px;color:var(--green);margin-top:6px}
+.grid{display:grid;grid-template-columns:1.15fr .85fr;gap:13px;margin-top:13px}.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:13px;margin-top:13px}.full{margin-top:13px}.card h3{font-size:13px;margin:0 0 12px}.sub{font-size:10px;color:var(--muted)}
+.barrow{display:grid;grid-template-columns:155px 1fr 70px;gap:9px;align-items:center;margin:11px 0;font-size:11px}.bar{height:8px;background:#203641;border-radius:8px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--gold));border-radius:8px}
+.donut{width:168px;height:168px;border-radius:50%;margin:5px auto 12px;position:relative;background:conic-gradient(var(--red) 0 20%,var(--gold) 20% 40%,var(--cyan) 40% 60%,var(--green) 60% 80%,var(--orange) 80% 100%)}.donut:after{content:"";position:absolute;inset:36px;background:var(--panel);border-radius:50%}.center{position:absolute;z-index:2;inset:0;display:flex;align-items:center;justify-content:center;font-weight:800}
+.legend{display:grid;grid-template-columns:1fr 1fr;gap:7px;font-size:10px}.legend span:before{content:"";display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--c);margin-right:6px}
+table{width:100%;border-collapse:collapse;font-size:10px}th,td{text-align:left;padding:9px 7px;border-bottom:1px solid #203741}th{color:#8fa5ac;font-weight:600}td{color:#dbe5e8}.risk-high{color:#ff777d}.risk-med{color:#f0c36b}.risk-low{color:#70e8ac}
+.activity{max-height:245px;overflow:auto}.event{padding:9px 0;border-bottom:1px solid #203741;font-size:10px}.event b{color:#fff}.event time{float:right;color:#6f8790}
+.page{display:none}.page.active{display:block}.hero{padding:19px;background:linear-gradient(120deg,#26141a,#12313a);border:1px solid #4a3335;border-radius:14px;margin-bottom:13px}.hero h2{margin:0 0 7px;font-size:19px}.hero p{margin:0;color:#afc0c5;font-size:11px;line-height:1.6}
+.action{background:var(--red);border:0;color:white;padding:9px 12px;border-radius:8px;cursor:pointer;font-weight:700}.secondary{background:#203640}.campaign-form{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.campaign-form select,.campaign-form input{background:#0b1922;color:white;border:1px solid var(--line);padding:10px;border-radius:8px}.message{margin-top:11px;padding:14px;background:#0a1720;border:1px solid var(--line);border-radius:10px;line-height:1.6;font-size:11px;white-space:pre-wrap}
+.segment-cards{display:grid;grid-template-columns:repeat(5,1fr);gap:9px}.seg{padding:13px;border:1px solid var(--line);background:#0c1c25;border-radius:10px;cursor:pointer}.seg:hover{border-color:#8c6d38}.seg strong{font-size:11px}.seg .big{font-size:20px;font-weight:800;margin:7px 0}.seg small{color:var(--muted)}
+canvas{width:100%;height:175px;background:#0b1a23;border-radius:8px}
+.footer{margin-top:18px;color:#647a82;font-size:9px;text-align:center}
+.badge{display:inline-block;background:#35251d;color:#f0c878;border:1px solid #725b31;padding:4px 7px;border-radius:5px;font-size:9px;margin-bottom:8px}.ai{background:linear-gradient(135deg,#211a1c,#102b32)}.insight{line-height:1.65;color:#dce7e9;font-size:11px}
+@media(max-width:1050px){.side{width:190px}.main{margin-left:190px;width:calc(100% - 190px)}.kpis{grid-template-columns:repeat(2,1fr)}.grid,.grid3{grid-template-columns:1fr}.segment-cards{grid-template-columns:repeat(2,1fr)}}@media(max-width:700px){.side{display:none}.main{margin:0;width:100%;padding:14px}.kpis{grid-template-columns:1fr 1fr}.campaign-form{grid-template-columns:1fr}.segment-cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="side">
+<div class="brand"><span class="ai">AIR INDIA</span><br><span class="mc">MAHARAJA CLUB</span><br>AI Customer Intelligence</div>
+<div class="nav">
+<button class="active" data-page="dashboard">◉ Dashboard</button>
+<button data-page="segments">◈ Member Segments</button>
+<button data-page="members">◎ Member 360</button>
+<button data-page="campaigns">◇ Campaign Intelligence</button>
+<button data-page="studio">✦ AI Campaign Studio</button>
+<button data-page="journey">⌁ Member Journey</button>
+<button data-page="risk">⚠ Churn / Renewal Risk</button>
+<button data-page="events">● Live Events</button>
+<button data-page="insights">✧ AI Loyalty Analyst</button>
+</div></aside>
+<main class="main">
+<header class="top"><div class="title"><h1 id="pageTitle">Air India Maharaja Club — Live Intelligence</h1><p>Behavioral member segmentation • loyalty • campaign intelligence • live activity</p></div><div class="live"><i class="dot"></i> LIVE <span id="lastUpdate"></span></div></header>
+
+<section class="page active" id="dashboard">
+<div class="filters">
+<select id="segFilter"><option value="all">All Member Segments</option></select>
+<select id="channelFilter"><option value="all">All Channels</option><option>Email</option><option>WhatsApp</option><option>App Push</option><option>SMS</option><option>Social</option></select>
+<select id="riskFilter"><option value="all">All Risk</option><option>High</option><option>Medium</option><option>Low</option></select>
+</div>
+<div class="kpis" id="kpis"></div>
+<div class="grid">
+<div class="card"><h3>Revenue / Value by Member Segment</h3><div id="revenueBars"></div></div>
+<div class="card"><h3>Maharaja Club Member Mix</h3><div class="donut" id="donut"><div class="center" id="donutCenter"></div></div><div class="legend" id="legend"></div></div>
+</div>
+<div class="grid3">
+<div class="card"><h3>Engagement by Segment</h3><canvas id="engagementChart"></canvas></div>
+<div class="card"><h3>Campaign Conversions</h3><canvas id="campaignChart"></canvas></div>
+<div class="card ai"><span class="badge">AI LOYALTY ANALYST</span><div class="insight" id="aiInsight"></div></div>
+</div>
+<div class="card full"><h3>Live Maharaja Club Activity <span class="sub">simulated API event stream</span></h3><div class="activity" id="activity"></div></div>
+</section>
+
+<section class="page" id="segments">
+<div class="hero"><h2>Behavioral Member Segmentation</h2><p>Members are segmented from travel frequency, spend, engagement, reward usage, recency and digital interaction—not only age or city.</p></div>
+<div class="segment-cards" id="segmentCards"></div>
+<div class="grid"><div class="card"><h3>Selected Segment Profile</h3><div id="segmentDetails"></div></div><div class="card ai"><span class="badge">AI INTERPRETATION</span><div class="insight" id="segmentAI"></div></div></div>
+</section>
+
+<section class="page" id="members">
+<div class="hero"><h2>Member 360</h2><p>Search Maharaja Club members and view travel, engagement, value and renewal signals.</p></div>
+<div class="filters"><input id="memberSearch" placeholder="Search member ID or city..." style="min-width:280px"><button class="action" onclick="renderMembers()">Search</button></div>
+<div class="card"><table><thead><tr><th>Member</th><th>City</th><th>Tier</th><th>Segment</th><th>Spend</th><th>Flights</th><th>Engagement</th><th>Risk</th></tr></thead><tbody id="memberTable"></tbody></table></div>
+</section>
+
+<section class="page" id="campaigns">
+<div class="hero"><h2>Campaign Intelligence</h2><p>Monitor loyalty campaigns by channel, segment, conversion and estimated revenue.</p></div>
+<div class="card"><table><thead><tr><th>Campaign</th><th>Channel</th><th>Segment</th><th>Reach</th><th>Clicks</th><th>Conversions</th><th>Revenue</th><th>ROAS</th><th>Status</th></tr></thead><tbody id="campaignTable"></tbody></table></div>
+</section>
+
+<section class="page" id="studio">
+<div class="hero"><h2>AI Campaign Studio</h2><p>Create differentiated Maharaja Club campaigns from live behavioral signals.</p></div>
+<div class="card"><div class="campaign-form"><select id="studioSeg"></select><select id="studioObjective"><option>Retention</option><option>Tier Upgrade</option><option>Flight Conversion</option><option>Cross-sell</option><option>Reactivation</option><option>Engagement</option></select><select id="studioChannel"><option>Email</option><option>WhatsApp</option><option>App Push</option><option>SMS</option><option>Social Media</option></select></div><br><button class="action" onclick="generateCampaign()">Generate AI Campaign</button><div class="message" id="campaignOutput">Your personalized Air India campaign will appear here.</div></div>
+</section>
+
+<section class="page" id="journey">
+<div class="hero"><h2>Maharaja Club Member Journey</h2><p>Track the journey from campaign exposure to flight booking, loyalty engagement and repeat travel.</p></div>
+<div class="card" id="funnel"></div>
+<div class="card full ai"><span class="badge">AI JOURNEY DIAGNOSIS</span><div class="insight" id="funnelAI"></div></div>
+</section>
+
+<section class="page" id="risk">
+<div class="hero"><h2>Churn / Renewal Risk</h2><p>Identify members whose travel recency, frequency or engagement suggests a need for retention action.</p></div>
+<div class="card"><table><thead><tr><th>Member</th><th>Tier</th><th>Segment</th><th>Last Flight</th><th>Spend</th><th>Engagement</th><th>Risk</th><th>Recommended Action</th></tr></thead><tbody id="riskTable"></tbody></table></div>
+</section>
+
+<section class="page" id="events">
+<div class="hero"><h2>Live Event Stream</h2><p>Demonstration event stream representing booking, flight, campaign and loyalty events. Production APIs can replace this simulator.</p></div>
+<div class="card"><div class="activity" id="eventStream" style="max-height:600px"></div></div>
+</section>
+
+<section class="page" id="insights">
+<div class="hero"><h2>AI Loyalty Analyst</h2><p>Ask questions about the current Maharaja Club dashboard data.</p></div>
+<div class="card"><div class="filters"><input id="question" style="flex:1" placeholder="e.g. Which segment has the highest member value?"><button class="action" onclick="askAI()">Ask AI</button></div><div class="message" id="answer">Ask about member value, churn, engagement, campaigns, segments or the journey funnel.</div></div>
+</section>
+<div class="footer">Air India Maharaja Club academic demonstration • Live simulation enabled • Replace simulator with production APIs for actual live data</div>
+</main></div>
+
+<script>
+const SEG_COLORS=['#d71920','#d6ad5a','#4fc7d9','#38d996','#f0a45b'];
+const SEGMENTS=['Premium Frequent Flyers','Business Travelers','Leisure Explorers','Reward Maximizers','At-Risk Members'];
+const TIERS=['Red','Silver','Gold','Platinum'];
+const CITIES=['Mumbai','Delhi','Bengaluru','Hyderabad','Chennai','Kolkata','Ahmedabad','Pune'];
+const CHANNELS=['Email','WhatsApp','App Push','SMS','Social'];
+let members=[],events=[],campaigns=[],selectedSegment=SEGMENTS[0];
+
+function rand(a,b){return Math.random()*(b-a)+a} function rint(a,b){return Math.floor(rand(a,b+1))}
+function money(x){return '₹'+Math.round(x).toLocaleString('en-IN')}
+function risk(m){let s=(m.recency/180)*45+(1-m.engagement/100)*35+(m.flights<3?20:0);return s>62?'High':s>38?'Medium':'Low'}
+function seed(){
+for(let i=1;i<=1200;i++){let spend=rand(3000,220000),flights=rint(1,45),rec=rint(1,180),eng=rand(5,100),reward=rint(0,80000);
+let score=(spend/220000)*.34+(flights/45)*.30+(1-rec/180)*.20+(eng/100)*.16;
+let seg=score>.72?'Premium Frequent Flyers':score>.54?'Business Travelers':score>.39?'Leisure Explorers':rec>110?'At-Risk Members':'Reward Maximizers';
+let tier=spend>150000?'Platinum':spend>90000?'Gold':spend>45000?'Silver':'Red';
+members.push({id:'MC'+String(i).padStart(5,'0'),city:CITIES[rint(0,CITIES.length-1)],tier,spend,flights,recency:rec,engagement:eng,reward,segment:seg,avgFare:spend/Math.max(flights,1),app:rint(1,100)});
+}
+let names=['Premium Upgrade','Fly More Rewards','Mumbai–Delhi Reactivation','Family Holiday','Business Traveller','App Booking Boost','Maharaja Weekend','Reward Points Booster'];
+for(let i=0;i<8;i++)campaigns.push({name:names[i],channel:CHANNELS[rint(0,4)],segment:SEGMENTS[rint(0,4)],reach:rint(18000,140000),clicks:rint(800,12000),conversions:rint(60,1100),revenue:rint(50000,700000),cost:rint(15000,120000)});
+}
+function filtered(){let s=document.getElementById('segFilter')?.value||'all',r=document.getElementById('riskFilter')?.value||'all';return members.filter(m=>(s==='all'||m.segment===s)&&(r==='all'||risk(m)===r))}
+function kpis(){let d=filtered(),rev=d.reduce((a,m)=>a+m.spend,0),active=d.filter(m=>m.recency<60).length,avg=rev/Math.max(d.length,1),fl=d.reduce((a,m)=>a+m.flights,0)/Math.max(d.length,1),points=d.reduce((a,m)=>a+m.reward,0);
+let vals=[['Maharaja Club Members',d.length,'live member base'],['Active Travelers',active,Math.round(active/Math.max(d.length,1)*100)+'% active'],['Member Value',money(rev),'simulated travel value'],['Avg. Member Value',money(avg),'per member'],['Avg. Flights / Member',fl.toFixed(1),'travel frequency'],['Reward Points',points.toLocaleString(),'points balance'],['Premium Frequent',d.filter(m=>m.segment===SEGMENTS[0]).length,'priority segment'],['High Renewal Risk',d.filter(m=>risk(m)==='High').length,'retention queue']];
+document.getElementById('kpis').innerHTML=vals.map(v=>`<div class="card kpi"><div class="label">${v[0]}</div><div class="value">${v[1]}</div><div class="delta">↑ ${v[2]}</div></div>`).join('')}
+function revenue(){let sums=SEGMENTS.map(s=>members.filter(m=>m.segment===s).reduce((a,m)=>a+m.spend,0)),max=Math.max(...sums);document.getElementById('revenueBars').innerHTML=SEGMENTS.map((s,i)=>`<div class="barrow"><span>${s}</span><div class="bar"><i style="width:${sums[i]/max*100}%"></i></div><b>${money(sums[i])}</b></div>`).join('')}
+function mix(){let counts=SEGMENTS.map(s=>members.filter(m=>m.segment===s).length),total=counts.reduce((a,b)=>a+b,0),cur=0;let stops=counts.map((n,i)=>{let st=cur;cur+=n/total*100;return `${SEG_COLORS[i]} ${st}% ${cur}%`});document.getElementById('donut').style.background=`conic-gradient(${stops.join(',')})`;document.getElementById('donutCenter').textContent=total;document.getElementById('legend').innerHTML=SEGMENTS.map((s,i)=>`<span style="--c:${SEG_COLORS[i]}">${s} — ${counts[i]}</span>`).join('')}
+function drawCanvas(id,vals,labels){let c=document.getElementById(id),ctx=c.getContext('2d'),dpr=devicePixelRatio||1,w=c.clientWidth,h=c.clientHeight;c.width=w*dpr;c.height=h*dpr;ctx.scale(dpr,dpr);ctx.clearRect(0,0,w,h);ctx.strokeStyle='#24414b';ctx.fillStyle='#8fa5ac';ctx.font='10px Segoe UI';for(let y=20;y<h-20;y+=35){ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(w-10,y);ctx.stroke()}let max=Math.max(...vals,1),bw=(w-55)/vals.length*.62;vals.forEach((v,i)=>{let x=38+i*((w-55)/vals.length),bh=v/max*(h-48);ctx.fillStyle=SEG_COLORS[i%SEG_COLORS.length];ctx.fillRect(x,h-28-bh,bw,bh);ctx.fillStyle='#9aaeb5';ctx.fillText(labels[i],x,h-10)})}
+function charts(){drawCanvas('engagementChart',SEGMENTS.map(s=>{let a=members.filter(m=>m.segment===s);return a.reduce((x,m)=>x+m.engagement,0)/Math.max(a.length,1)}),['Premium','Business','Leisure','Rewards','Risk']);drawCanvas('campaignChart',campaigns.slice(0,5).map(c=>c.conversions),['C1','C2','C3','C4','C5'])}
+function insight(){let prem=members.filter(m=>m.segment===SEGMENTS[0]),riskc=members.filter(m=>risk(m)==='High'),revs=SEGMENTS.map(s=>[s,members.filter(m=>m.segment===s).reduce((a,m)=>a+m.spend,0)]).sort((a,b)=>b[1]-a[1]);document.getElementById('aiInsight').innerHTML=`<b>${revs[0][0]}</b> currently contributes the highest simulated member value at approximately <b>${money(revs[0][1])}</b>.<br><br><b>${prem.length}</b> members are Premium Frequent Flyers. <b>${riskc.length}</b> members are currently high renewal-risk.<br><br><b>Action:</b> prioritize retention and personalized upgrade/cross-sell journeys for high-value members, while using win-back messaging for high-risk members.`}
+function activity(){let h=events.slice(-18).reverse().map(e=>`<div class="event"><b>${e.type}</b> — ${e.text}<time>${e.time}</time></div>`).join('');document.getElementById('activity').innerHTML=h;document.getElementById('eventStream').innerHTML=h}
+function liveEvent(){let m=members[rint(0,members.length-1)],types=['Flight Booked','Flight Completed','App Login','Campaign Click','Reward Redemption','Campaign Conversion'],t=types[rint(0,types.length-1)];
+if(t==='Flight Booked'){m.spend+=rand(2500,18000);m.flights++;m.recency=1}
+if(t==='Flight Completed')m.recency=1;
+if(t==='App Login')m.engagement=Math.min(100,m.engagement+rand(.5,3));
+if(t==='Campaign Click')m.engagement=Math.min(100,m.engagement+rand(1,4));
+if(t==='Reward Redemption')m.reward=Math.max(0,m.reward-rint(1000,5000));
+if(t==='Campaign Conversion'){m.spend+=rand(3000,22000);m.flights++}
+let txt=t==='Flight Booked'?`${m.id} booked a flight worth ${money(m.avgFare)}`:t==='Reward Redemption'?`${m.id} redeemed Maharaja Club reward points`:`${m.id} generated a ${t.toLowerCase()} event`;
+events.push({type:t,text:txt,time:new Date().toLocaleTimeString()});if(events.length>90)events.shift();
+let score=(m.spend/220000)*.34+(m.flights/45)*.30+(1-m.recency/180)*.20+(m.engagement/100)*.16;m.segment=score>.72?'Premium Frequent Flyers':score>.54?'Business Travelers':score>.39?'Leisure Explorers':m.recency>110?'At-Risk Members':'Reward Maximizers';render()}
+function renderSegments(){document.getElementById('segmentCards').innerHTML=SEGMENTS.map(s=>{let a=members.filter(m=>m.segment===s),v=a.reduce((x,m)=>x+m.spend,0);return `<div class="seg" onclick="selectSegment('${s}')"><strong>${s}</strong><div class="big">${a.length}</div><small>${money(v)} value</small></div>`}).join('');selectSegment(selectedSegment)}
+function selectSegment(s){selectedSegment=s;let a=members.filter(m=>m.segment===s),avg=x=>a.reduce((z,m)=>z+m[x],0)/Math.max(a.length,1);document.getElementById('segmentDetails').innerHTML=`<div class="barrow"><span>Avg Member Value</span><div class="bar"><i style="width:${Math.min(100,avg('spend')/2200)}%"></i></div><b>${money(avg('spend'))}</b></div><div class="barrow"><span>Flights</span><div class="bar"><i style="width:${avg('flights')/45*100}%"></i></div><b>${avg('flights').toFixed(1)}</b></div><div class="barrow"><span>Engagement</span><div class="bar"><i style="width:${avg('engagement')}%"></i></div><b>${avg('engagement').toFixed(0)}%</b></div><div class="barrow"><span>Recency</span><div class="bar"><i style="width:${100-avg('recency')/180*100}%"></i></div><b>${avg('recency').toFixed(0)}d</b></div>`;
+let strategy=s==='Premium Frequent Flyers'?'premium cabin access, upgrades and personalized cross-sell':s==='Business Travelers'?'flexibility, priority services and business-route offers':s==='Leisure Explorers'?'holiday bundles, family offers and destination inspiration':s==='Reward Maximizers'?'reward-led engagement and point accelerators':'win-back, service recovery and personalized flight incentives';
+document.getElementById('segmentAI').innerHTML=`<b>${s}</b> contains <b>${a.length}</b> members with average travel frequency of <b>${avg('flights').toFixed(1)}</b> flights and average engagement of <b>${avg('engagement').toFixed(0)}%</b>.<br><br><b>Recommended differentiated strategy:</b> ${strategy}.`}
+function renderMembers(){let q=(document.getElementById('memberSearch').value||'').toLowerCase(),d=members.filter(m=>m.id.toLowerCase().includes(q)||m.city.toLowerCase().includes(q)).slice(0,60);document.getElementById('memberTable').innerHTML=d.map(m=>`<tr><td>${m.id}</td><td>${m.city}</td><td>${m.tier}</td><td>${m.segment}</td><td>${money(m.spend)}</td><td>${m.flights}</td><td>${m.engagement.toFixed(0)}%</td><td class="risk-${risk(m).toLowerCase()}">${risk(m)}</td></tr>`).join('')}
+function renderCampaigns(){document.getElementById('campaignTable').innerHTML=campaigns.map(c=>`<tr><td>${c.name}</td><td>${c.channel}</td><td>${c.segment}</td><td>${c.reach.toLocaleString()}</td><td>${c.clicks.toLocaleString()}</td><td>${c.conversions}</td><td>${money(c.revenue)}</td><td>${(c.revenue/c.cost).toFixed(1)}x</td><td class="risk-low">LIVE</td></tr>`).join('')}
+function renderRisk(){let d=members.filter(m=>risk(m)==='High').sort((a,b)=>b.spend-a.spend).slice(0,60);document.getElementById('riskTable').innerHTML=d.map(m=>`<tr><td>${m.id}</td><td>${m.tier}</td><td>${m.segment}</td><td>${m.recency} days</td><td>${money(m.spend)}</td><td>${m.engagement.toFixed(0)}%</td><td class="risk-high">High</td><td>Personalized win-back + flight incentive</td></tr>`).join('')}
+function renderFunnel(){let stages=[['Campaign Exposure',100],['Engagement',68],['Flight Search',43],['Fare/Flight View',31],['Booking',19],['Flight Completed',15],['Repeat Flight',9]];document.getElementById('funnel').innerHTML=stages.map(s=>`<div class="barrow"><span>${s[0]}</span><div class="bar"><i style="width:${s[1]}%"></i></div><b>${s[1]}%</b></div>`).join('');document.getElementById('funnelAI').innerHTML=`The largest simulated journey loss occurs between <b>Engagement → Flight Search</b>. Investigate personalization, route relevance, fare visibility and app/web friction at this stage.`}
+function generateCampaign(){let s=document.getElementById('studioSeg').value,o=document.getElementById('studioObjective').value,ch=document.getElementById('studioChannel').value;let t={'Premium Frequent Flyers':'priority upgrades, premium access and exclusive travel benefits','Business Travelers':'flexible fares, priority services and business-route value','Leisure Explorers':'destination inspiration and family/holiday bundles','Reward Maximizers':'bonus Maharaja Club points and redemption accelerators','At-Risk Members':'personalized win-back benefits and a limited-time flight incentive'};document.getElementById('campaignOutput').textContent=`AIR INDIA — MAHARAJA CLUB AI CAMPAIGN\n\nCAMPAIGN OBJECTIVE: ${o}\nTARGET SEGMENT: ${s}\nCHANNEL: ${ch}\n\nMESSAGE:\nYour next journey can be more rewarding. Discover ${t[s]} created around your travel behavior. Explore your personalized Maharaja Club benefits and plan your next Air India journey today.\n\nCTA: Explore My Maharaja Benefits\n\nAI RATIONALE:\nThe campaign is differentiated using observed travel frequency, recency, member value and digital engagement instead of broad demographic targeting.`}
+function askAI(){let q=(document.getElementById('question').value||'').toLowerCase(),revs=SEGMENTS.map(s=>[s,members.filter(m=>m.segment===s).reduce((a,m)=>a+m.spend,0)]).sort((a,b)=>b[1]-a[1]),ans;if(q.includes('value')||q.includes('revenue'))ans=`${revs[0][0]} currently contributes the highest simulated member value at ${money(revs[0][1])}.`;else if(q.includes('churn')||q.includes('risk')||q.includes('renew'))ans=`${members.filter(m=>risk(m)==='High').length} members are currently high risk. Prioritize high-value members in this group for personalized win-back and renewal communication.`;else if(q.includes('engagement'))ans=`The dashboard is currently tracking app/digital engagement as a behavioral signal. Compare the segment chart to identify which member groups need deeper personalization.`;else if(q.includes('segment'))ans=`The five behavioral segments are ${SEGMENTS.join(', ')}. They are driven by travel frequency, spend, recency and engagement.`;else if(q.includes('campaign'))ans=`Campaign Intelligence is updating through the live simulator. Current metrics include reach, clicks, conversions, revenue and ROAS.`;else ans=`Try asking: Which segment has the highest value? Which members are at renewal risk? Which segment has low engagement? Which campaign is performing best?`;document.getElementById('answer').textContent=ans}
+function render(){kpis();revenue();mix();charts();insight();activity();renderSegments();renderMembers();renderCampaigns();renderRisk();renderFunnel();document.getElementById('lastUpdate').textContent=new Date().toLocaleTimeString();document.getElementById('studioSeg').innerHTML=SEGMENTS.map(s=>`<option>${s}</option>`).join('');}
+document.querySelectorAll('.nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(b.dataset.page).classList.add('active');document.getElementById('pageTitle').textContent=b.textContent.replace(/[◉◈◎◇✦⌁⚠●✧]/g,'').trim()});
+document.getElementById('segFilter').onchange=render;document.getElementById('riskFilter').onchange=render;
+seed();for(let i=0;i<15;i++)liveEvent();render();setInterval(liveEvent,2500);
+</script>
+</body>
+</html>

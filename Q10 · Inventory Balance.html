@@ -1,0 +1,29 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Inventory Balance</title>
+<style>
+:root{color-scheme:light;--t:#16352c}
+*{box-sizing:border-box}body{margin:0;padding:calc(14px + env(safe-area-inset-top,0px)) 14px;background:#e6f7ef;color:var(--t);font:14px 'Segoe UI',system-ui,sans-serif}
+h1{margin:0;font-size:26px}.top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+button{border:0;background:var(--t);color:#fff;padding:9px 16px;border-radius:20px;font-weight:600;cursor:pointer}
+.k{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin:14px 0}
+.q{border-radius:22px;padding:14px;color:#fff}.q b{display:block;font-size:28px}
+.g{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(230px,1fr))}
+.c{background:#fff;border-radius:22px;padding:14px}.c h3{margin:0 0 6px;font-size:15px;display:flex;justify-content:space-between}
+.c em{font-style:normal;font-size:11px;padding:3px 9px;border-radius:12px;color:#fff}
+.v{position:relative;height:14px;background:#e4eee9;border-radius:7px;margin:10px 0}.v u{display:block;height:100%;border-radius:7px;transition:width .5s}.v i{position:absolute;top:-3px;width:3px;height:20px;background:#16352c}
+small{color:#4d6b60}
+</style>
+<div class=top><div><h1>Inventory Balance</h1><small>● live · 1 tick = 1 day · 10 synthetic SKUs · demand, seasonality, lead time</small></div><button id=sb></button></div>
+<div class=k id=k></div><div class=g id=g></div>
+<script>
+const R=(a,b)=>a+Math.random()*(b-a),Z=[['Earbuds',40,.8,7,1500],['Power banks',35,.5,6,900],['Cables',90,.1,4,150],['Smart watches',15,.9,10,3500],['Phone cases',70,.2,5,200],['Chargers',50,.3,6,600],['Screen guards',80,.1,3,100],['Speakers',20,.7,9,2500],['Tripods',8,.4,12,1200],['SD cards',30,.2,8,500]],SE=[['Normal',0],['Festive',.6],['Monsoon',-.3]];
+let I=Z.map(([n,d,s,l,p],i)=>({n,d,s,l,p,st:d*R(4,30)|0,fb:d*R(6,20)|0,o:i%7})),se=0,T=0,sd=0,td=0;
+sb.onclick=()=>{se=(se+1)%3;draw()};
+function draw(){sb.textContent='Season: '+SE[se][0]+' (tap to change)';let so=0,ex=0;
+g.innerHTML=I.map(x=>{const f=x.d*(1+x.s*SE[se][1]),rop=f*x.l+1.65*.3*f*Math.sqrt(x.l),tg=rop+f*14,cv=x.st/f,sc=f*45,
+S=x.st<rop?['Stockout risk','#e0506a']:cv>35?['Excess','#e8a21a']:['Healthy','#2eaa78'];if(S[0]=='Stockout risk')so++;ex+=Math.max(0,x.st-tg)*x.p;
+const rec=S[0]=='Stockout risk'?`Order ${Math.ceil(tg-x.st)} now (lead ${x.l}d)`:S[0]=='Excess'?`Pause orders; markdown ~${Math.min(30,cv-30|0)}%`:'Hold; next review in 3 days';
+return`<div class=c><h3>${x.n}<em style=background:${S[1]}>${S[0]}</em></h3><div class=v><u style="width:${Math.min(100,x.st/sc*100)}%;background:${S[1]}"></u><i style=left:${Math.min(98,rop/sc*100)}%></i></div><small>${x.st} units · ${cv.toFixed(0)}d cover · reorder pt ${rop.toFixed(0)}</small><br><b>${rec}</b></div>`}).join('');
+k.innerHTML=[['Stockout-risk SKUs',so,'#e0506a'],['Excess stock value','₹'+(ex/1e5).toFixed(1)+'L','#e8a21a'],['Service level',(100*(1-sd/Math.max(td,1))).toFixed(1)+'%','#2eaa78'],['Day',T,'#16352c']].map(([a,b,c])=>`<div class=q style=background:${c}>${a}<b>${b}</b></div>`).join('')}
+function tick(){T++;I.forEach(x=>{const dm=x.d*(1+x.s*SE[se][1])*R(.7,1.3);td++;if(x.st<dm)sd++;x.st=Math.max(0,Math.round(x.st-dm));if(T%7==x.o)x.st+=x.fb});draw()}
+draw();setInterval(tick,1200)
+</script>

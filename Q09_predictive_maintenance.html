@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Q9 — Predictive Maintenance</title>
+<style>
+:root{--bg:#f3f6fb;--panel:#fff;--ink:#172033;--muted:#68758b;--line:#dfe6f0;--accent:#3459d1;--accent2:#dfe7ff;--good:#13795b;--warn:#a65b00;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font:14px/1.5 Inter,Segoe UI,Arial,sans-serif;color:var(--ink)}header{background:#111d35;color:#fff;padding:25px max(18px,calc((100% - 1240px)/2)) 26px}.topline{display:flex;justify-content:space-between;gap:14px;align-items:center;flex-wrap:wrap}.eyebrow{font-size:11px;letter-spacing:1.4px;text-transform:uppercase;color:#aebfff;font-weight:800}h1{font-size:clamp(25px,4vw,35px);line-height:1.15;margin:8px 0}header p{max-width:850px;color:#d6deef;margin:0}.pill{display:inline-flex;border:1px solid #53627d;border-radius:20px;padding:5px 10px;color:#dbe5ff;font-size:12px}main{max-width:1240px;margin:22px auto;padding:0 18px 40px}.toolbar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;margin-bottom:14px}button,select,input{font:inherit}button{border:0;border-radius:9px;background:var(--accent);color:#fff;padding:10px 13px;font-weight:700;cursor:pointer}button.secondary{background:#e4eaf5;color:#273650}button:hover{filter:brightness(.97)}input,select{border:1px solid var(--line);border-radius:9px;background:#fff;padding:10px 12px;color:var(--ink)}.status{margin-left:auto;color:var(--muted);font-size:12px}.notice{border:1px solid #f1d49a;background:#fff8e7;border-radius:11px;padding:11px 14px;margin:0 0 15px;color:#704700;font-size:12px}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px}.metric,.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:17px;box-shadow:0 4px 14px #20325208}.metric .label{font-size:12px;color:var(--muted)}.metric strong{display:block;font-size:29px;margin:6px 0 2px;letter-spacing:-.5px}.metric small{color:var(--muted);font-size:11px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}h2{font-size:16px;margin:0 0 5px}.sub{color:var(--muted);font-size:12px;margin:0 0 13px}.chart-list{display:grid;gap:12px}.chart-row{display:grid;grid-template-columns:minmax(90px,145px) 1fr 42px;gap:9px;align-items:center;font-size:12px}.track{height:11px;background:#edf1f7;border-radius:20px;overflow:hidden}.bar{height:100%;background:linear-gradient(90deg,#3459d1,#7a9cff);border-radius:20px;transition:width .35s}.insight{background:#f5f7ff;border:1px solid #e0e6ff;border-radius:10px;padding:12px;color:#36456b;font-size:13px}.tablepanel{margin-top:14px}.tablehead{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:10px}.tablewrap{overflow:auto;border:1px solid var(--line);border-radius:10px}table{border-collapse:collapse;width:100%;min-width:880px;background:#fff}th,td{padding:10px 11px;border-bottom:1px solid #e9edf4;text-align:left;white-space:nowrap;font-size:12px}th{position:sticky;top:0;background:#f7f9fc;color:#66738a;text-transform:uppercase;font-size:10px;letter-spacing:.5px}tbody tr:hover{background:#f7f9ff}.risk{font-weight:800;border-radius:30px;padding:4px 8px;font-size:10px}.risk.High{background:#ffe4e1;color:#9f1c12}.risk.Medium{background:#fff0cf;color:#875000}.risk.Low{background:#dff7ed;color:#116448}.bottomline{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;color:var(--muted);font-size:11px;margin-top:11px}.empty{padding:22px;text-align:center;color:var(--muted)}footer{text-align:center;color:var(--muted);font-size:11px;padding:16px}@media(max-width:820px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}@media(max-width:450px){.metrics{grid-template-columns:1fr}.status{margin-left:0;width:100%}}@media print{body{background:white}.toolbar{display:none}main{max-width:none}.metric,.panel{box-shadow:none;break-inside:avoid}}
+
+/* DISTINCT DESIGN: Industrial machine console / graphite and safety amber */
+:root{--bg:#171a1c;--panel:#222729;--ink:#f0f2ee;--muted:#a8b0ad;--line:#41494a;--accent:#f6b91a;--accent2:#443713;--good:#73d3a5;--warn:#f6b91a;--bad:#ff6b5f}
+body{background:linear-gradient(180deg,#111415,#1b2021 38%,#121516);color:var(--ink);font-family:Consolas,Inter,Segoe UI,Arial,sans-serif}
+header{background:#0d1011;color:#f7f7f2;border-bottom:4px solid #f6b91a;box-shadow:0 8px 30px #0006}
+.eyebrow{color:#f6b91a;text-transform:uppercase;letter-spacing:.22em;font-family:Consolas,monospace}
+header h1{letter-spacing:-.03em}
+.metric{background:linear-gradient(145deg,#2a3031,#1d2223);border:1px solid #485050;border-radius:2px;border-bottom:3px solid #f6b91a}
+.panel{background:#202526;border:1px solid #454c4d;border-radius:2px;box-shadow:inset 0 1px #ffffff08,0 12px 28px #0003}
+.panel h2,.panel h3{font-family:Consolas,monospace;text-transform:uppercase;color:#f6c94e;letter-spacing:.06em}
+button{border-radius:2px;text-transform:uppercase;letter-spacing:.04em;font-weight:800}
+input,select{background:#141819!important;color:#f0f2ee!important;border-color:#4c5656!important;border-radius:2px!important}
+.bar{background:repeating-linear-gradient(90deg,#f6b91a,#f6b91a 9px,#d89e08 9px,#d89e08 18px)!important}
+.notice{background:#302914!important;border-color:#77601b!important}
+
+
+/* Q9 visibility + upgraded industrial telemetry console */
+body{background-image:linear-gradient(#ffffff04 1px,transparent 1px),linear-gradient(90deg,#ffffff04 1px,transparent 1px),linear-gradient(180deg,#111415,#1b2021 38%,#121516);background-size:28px 28px,28px 28px,auto}
+header{position:relative;overflow:hidden}
+header:after{content:"● SYSTEM ONLINE     /     SENSOR TELEMETRY     /     MAINTENANCE CONTROL";display:block;margin-top:18px;color:#f6c94e;font:700 10px/1.5 Consolas,monospace;letter-spacing:.12em}
+.pill{background:#292e2f;color:#f6c94e;border-color:#62605a}
+.metric{position:relative;overflow:hidden}
+.metric:after{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:#f6b91a}
+.metric .label{color:#c4ccca!important;text-transform:uppercase;letter-spacing:.08em;font-family:Consolas,monospace}
+.metric strong{color:#fff!important;text-shadow:0 0 16px #f6b91a24}
+.panel{position:relative}
+.panel h2{border-bottom:1px solid #444c4d;padding-bottom:9px}
+.sub{color:#c0c7c4!important}
+.insight{background:#302914!important;border:1px solid #80651b!important;color:#fff1bc!important}
+ul{color:#e0e4df}
+.tablewrap{background:#f7f8f7;border:2px solid #f6b91a;border-radius:4px;box-shadow:0 0 0 4px #f6b91a12}
+table{background:#f7f8f7!important;color:#202626!important;border-collapse:separate;border-spacing:0;min-width:980px}
+thead tr{background:#2b3031!important}
+th{background:#2b3031!important;color:#ffd65a!important;border-bottom:2px solid #f6b91a!important;font-family:Consolas,monospace;font-size:11px!important;letter-spacing:.06em;padding:12px!important}
+td{color:#202626!important;background:#f7f8f7!important;border-bottom:1px solid #d8ddda!important;font-size:12px!important;font-weight:600}
+tbody tr:nth-child(even) td{background:#e9eeeb!important}
+tbody tr:hover td{background:#fff0c2!important;color:#171a1c!important}
+td .risk{display:inline-block}
+.risk.High{background:#ffd8d3!important;color:#8b160d!important;border:1px solid #f1a49b}
+.risk.Medium{background:#fff0bf!important;color:#714600!important;border:1px solid #e5c66c}
+.risk.Low{background:#d4f5e5!important;color:#0b5b3a!important;border:1px solid #8acbaa}
+.tablehead .sub{color:#c0c7c4!important}
+.bottomline{color:#c0c7c4!important}
+#rowCount{background:#2b3031!important;color:#ffd65a!important;border-color:#f6b91a!important}
+.toolbar input,.toolbar select{background:#141819!important;color:#f0f2ee!important;border-color:#5a6262!important}
+button.secondary{background:#343a3b!important;color:#ffe18a!important;border:1px solid #6d622e!important}
+button:not(.secondary){background:#f6b91a!important;color:#1b1d1d!important}
+@media(max-width:700px){header:after{font-size:9px}.tablewrap{border-width:1px}}
+
+</style></head><body>
+<header><div class="topline"><div><div class="eyebrow">Question 9 · Operations intelligence</div><h1>Predictive Maintenance</h1><p>Review machine condition indicators and prioritize maintenance before unexpected downtime.</p></div><span class="pill">Interactive dashboard · Demo mode</span></div></header>
+<main>
+<div class="notice"><b>DATA LABEL: SYNTHETIC DEMO DATA.</b> These records were generated for this dashboard; they are not real employees, shipments, machines, suppliers, or company inventory. “Refresh demo data” simulates a refresh locally. No live company API is connected.</div>
+<div class="toolbar">
+<button onclick="refreshData()">Refresh demo data</button>
+<button class="secondary" onclick="exportCSV()">Export filtered data CSV</button>
+<button class="secondary" onclick="window.print()">Print / Save as PDF</button>
+<input id="search" placeholder="Search records…" oninput="render()" aria-label="Search records">
+<select id="riskFilter" onchange="render()" aria-label="Filter by priority"><option value="All">All priorities</option><option>High</option><option>Medium</option><option>Low</option></select>
+<span class="status" id="refreshStatus">Demo data loaded</span>
+</div>
+<section class="metrics" id="metrics"></section>
+<div class="grid">
+<section class="panel"><h2>Failure risk score — highest-risk machines</h2><p class="sub">Calculated from the currently filtered sample records.</p><div class="chart-list" id="chart"></div></section>
+<section class="panel"><h2>AI-assisted recommendations</h2><p class="sub">Decision support for review — not automated action.</p><div class="insight" id="insight"></div><p class="sub" style="margin-top:12px">Suggested operating rhythm</p><ul style="padding-left:18px;margin-bottom:0"><li>Validate source data and thresholds.</li><li>Assign an accountable owner to each action.</li><li>Review outcomes and adjust the intervention.</li></ul></section>
+</div>
+<section class="panel tablepanel"><div class="tablehead"><div><h2>Machine condition and maintenance queue</h2><p class="sub" style="margin-bottom:0">Filter by priority or search any visible field.</p></div><span id="rowCount" class="pill" style="background:#f2f5fb;color:#52617a;border-color:#dfe6f0">0 records</span></div><div class="tablewrap"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div><div class="bottomline"><span>All dashboard metrics are recalculated in your browser.</span><span>Last refresh: <b id="lastRefresh">—</b></span></div></section>
+<footer>Question 9 prototype · Synthetic dataset · No external data connection · No flowchart included</footer>
+</main>
+<script>
+const CONFIG={"title": "Predictive Maintenance", "category": "Operations", "subtitle": "Review machine condition indicators and prioritize maintenance before unexpected downtime.", "chart": "Machine", "chartTitle": "Failure risk score — highest-risk machines", "metricLabels": ["Machines monitored", "High-priority alerts", "Avg risk score", "Downtime in sample"], "metricKeys": ["count", "high", "risk", "downtime"], "unit": ["", "", "/100", " hrs"], "tableTitle": "Machine condition and maintenance queue", "insight": "Sensor readings and risk scores are synthetic examples, not live telemetry or a validated predictive model. Confirm against actual sensor and maintenance logs."};
+let data=[{"Machine": "MCH-001", "Line": "Line C", "Temperature (°C)": 83.4, "Vibration (mm/s)": 8.4, "Tool wear (min)": 99, "Downtime (hrs/30d)": 4, "Failure risk score": 74, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-002", "Line": "Line A", "Temperature (°C)": 95.4, "Vibration (mm/s)": 2.4, "Tool wear (min)": 150, "Downtime (hrs/30d)": 15, "Failure risk score": 77, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-003", "Line": "Line A", "Temperature (°C)": 85.1, "Vibration (mm/s)": 5.4, "Tool wear (min)": 223, "Downtime (hrs/30d)": 6, "Failure risk score": 92, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-004", "Line": "Line A", "Temperature (°C)": 70.6, "Vibration (mm/s)": 1.8, "Tool wear (min)": 175, "Downtime (hrs/30d)": 14, "Failure risk score": 49, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-005", "Line": "Line C", "Temperature (°C)": 74.1, "Vibration (mm/s)": 8.1, "Tool wear (min)": 46, "Downtime (hrs/30d)": 5, "Failure risk score": 61, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-006", "Line": "Line A", "Temperature (°C)": 90.2, "Vibration (mm/s)": 1.1, "Tool wear (min)": 205, "Downtime (hrs/30d)": 4, "Failure risk score": 76, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-007", "Line": "Line C", "Temperature (°C)": 72.8, "Vibration (mm/s)": 1.9, "Tool wear (min)": 123, "Downtime (hrs/30d)": 9, "Failure risk score": 48, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-008", "Line": "Line C", "Temperature (°C)": 74.4, "Vibration (mm/s)": 5.3, "Tool wear (min)": 64, "Downtime (hrs/30d)": 9, "Failure risk score": 58, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-009", "Line": "Line B", "Temperature (°C)": 85.1, "Vibration (mm/s)": 2.1, "Tool wear (min)": 38, "Downtime (hrs/30d)": 4, "Failure risk score": 40, "Priority": "Low", "Recommended action": "Continue routine maintenance"}, {"Machine": "MCH-010", "Line": "Line C", "Temperature (°C)": 95.3, "Vibration (mm/s)": 3.4, "Tool wear (min)": 144, "Downtime (hrs/30d)": 2, "Failure risk score": 71, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-011", "Line": "Line A", "Temperature (°C)": 83.9, "Vibration (mm/s)": 3.8, "Tool wear (min)": 94, "Downtime (hrs/30d)": 14, "Failure risk score": 79, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-012", "Line": "Line B", "Temperature (°C)": 65.2, "Vibration (mm/s)": 5.0, "Tool wear (min)": 11, "Downtime (hrs/30d)": 16, "Failure risk score": 38, "Priority": "Low", "Recommended action": "Continue routine maintenance"}, {"Machine": "MCH-013", "Line": "Line A", "Temperature (°C)": 94.2, "Vibration (mm/s)": 4.6, "Tool wear (min)": 122, "Downtime (hrs/30d)": 14, "Failure risk score": 96, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-014", "Line": "Line D", "Temperature (°C)": 82.3, "Vibration (mm/s)": 2.3, "Tool wear (min)": 45, "Downtime (hrs/30d)": 6, "Failure risk score": 51, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-015", "Line": "Line A", "Temperature (°C)": 65.6, "Vibration (mm/s)": 4.5, "Tool wear (min)": 139, "Downtime (hrs/30d)": 3, "Failure risk score": 42, "Priority": "Low", "Recommended action": "Continue routine maintenance"}, {"Machine": "MCH-016", "Line": "Line A", "Temperature (°C)": 89.3, "Vibration (mm/s)": 2.9, "Tool wear (min)": 180, "Downtime (hrs/30d)": 10, "Failure risk score": 74, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-017", "Line": "Line D", "Temperature (°C)": 66.9, "Vibration (mm/s)": 4.2, "Tool wear (min)": 88, "Downtime (hrs/30d)": 1, "Failure risk score": 24, "Priority": "Low", "Recommended action": "Continue routine maintenance"}, {"Machine": "MCH-018", "Line": "Line A", "Temperature (°C)": 69.1, "Vibration (mm/s)": 6.1, "Tool wear (min)": 122, "Downtime (hrs/30d)": 10, "Failure risk score": 52, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-019", "Line": "Line C", "Temperature (°C)": 69.7, "Vibration (mm/s)": 5.0, "Tool wear (min)": 102, "Downtime (hrs/30d)": 6, "Failure risk score": 45, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-020", "Line": "Line C", "Temperature (°C)": 67.3, "Vibration (mm/s)": 4.6, "Tool wear (min)": 130, "Downtime (hrs/30d)": 5, "Failure risk score": 45, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-021", "Line": "Line A", "Temperature (°C)": 63.4, "Vibration (mm/s)": 7.8, "Tool wear (min)": 79, "Downtime (hrs/30d)": 10, "Failure risk score": 63, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-022", "Line": "Line B", "Temperature (°C)": 70.3, "Vibration (mm/s)": 1.8, "Tool wear (min)": 14, "Downtime (hrs/30d)": 7, "Failure risk score": 36, "Priority": "Low", "Recommended action": "Continue routine maintenance"}, {"Machine": "MCH-023", "Line": "Line B", "Temperature (°C)": 74.9, "Vibration (mm/s)": 7.8, "Tool wear (min)": 21, "Downtime (hrs/30d)": 5, "Failure risk score": 59, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-024", "Line": "Line A", "Temperature (°C)": 77.8, "Vibration (mm/s)": 2.3, "Tool wear (min)": 231, "Downtime (hrs/30d)": 9, "Failure risk score": 57, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-025", "Line": "Line B", "Temperature (°C)": 76.0, "Vibration (mm/s)": 3.6, "Tool wear (min)": 57, "Downtime (hrs/30d)": 15, "Failure risk score": 57, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-026", "Line": "Line D", "Temperature (°C)": 66.9, "Vibration (mm/s)": 7.2, "Tool wear (min)": 191, "Downtime (hrs/30d)": 8, "Failure risk score": 68, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-027", "Line": "Line D", "Temperature (°C)": 97.4, "Vibration (mm/s)": 6.3, "Tool wear (min)": 183, "Downtime (hrs/30d)": 7, "Failure risk score": 99, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-028", "Line": "Line C", "Temperature (°C)": 85.5, "Vibration (mm/s)": 2.0, "Tool wear (min)": 20, "Downtime (hrs/30d)": 3, "Failure risk score": 44, "Priority": "Low", "Recommended action": "Continue routine maintenance"}, {"Machine": "MCH-029", "Line": "Line B", "Temperature (°C)": 96.5, "Vibration (mm/s)": 3.5, "Tool wear (min)": 212, "Downtime (hrs/30d)": 9, "Failure risk score": 96, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-030", "Line": "Line C", "Temperature (°C)": 76.3, "Vibration (mm/s)": 3.9, "Tool wear (min)": 197, "Downtime (hrs/30d)": 16, "Failure risk score": 70, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-031", "Line": "Line B", "Temperature (°C)": 67.1, "Vibration (mm/s)": 3.6, "Tool wear (min)": 55, "Downtime (hrs/30d)": 15, "Failure risk score": 54, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-032", "Line": "Line B", "Temperature (°C)": 77.4, "Vibration (mm/s)": 4.2, "Tool wear (min)": 153, "Downtime (hrs/30d)": 8, "Failure risk score": 55, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-033", "Line": "Line C", "Temperature (°C)": 68.4, "Vibration (mm/s)": 8.3, "Tool wear (min)": 138, "Downtime (hrs/30d)": 5, "Failure risk score": 69, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-034", "Line": "Line C", "Temperature (°C)": 76.5, "Vibration (mm/s)": 3.0, "Tool wear (min)": 23, "Downtime (hrs/30d)": 6, "Failure risk score": 42, "Priority": "Low", "Recommended action": "Continue routine maintenance"}, {"Machine": "MCH-035", "Line": "Line A", "Temperature (°C)": 81.0, "Vibration (mm/s)": 8.0, "Tool wear (min)": 234, "Downtime (hrs/30d)": 2, "Failure risk score": 87, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-036", "Line": "Line A", "Temperature (°C)": 83.9, "Vibration (mm/s)": 7.3, "Tool wear (min)": 134, "Downtime (hrs/30d)": 11, "Failure risk score": 92, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-037", "Line": "Line C", "Temperature (°C)": 83.8, "Vibration (mm/s)": 8.2, "Tool wear (min)": 176, "Downtime (hrs/30d)": 6, "Failure risk score": 76, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-038", "Line": "Line C", "Temperature (°C)": 62.6, "Vibration (mm/s)": 4.0, "Tool wear (min)": 189, "Downtime (hrs/30d)": 0, "Failure risk score": 32, "Priority": "Low", "Recommended action": "Continue routine maintenance"}, {"Machine": "MCH-039", "Line": "Line B", "Temperature (°C)": 71.9, "Vibration (mm/s)": 3.4, "Tool wear (min)": 22, "Downtime (hrs/30d)": 5, "Failure risk score": 37, "Priority": "Low", "Recommended action": "Continue routine maintenance"}, {"Machine": "MCH-040", "Line": "Line B", "Temperature (°C)": 94.5, "Vibration (mm/s)": 6.4, "Tool wear (min)": 59, "Downtime (hrs/30d)": 8, "Failure risk score": 83, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-041", "Line": "Line C", "Temperature (°C)": 92.2, "Vibration (mm/s)": 5.5, "Tool wear (min)": 189, "Downtime (hrs/30d)": 16, "Failure risk score": 99, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-042", "Line": "Line D", "Temperature (°C)": 84.4, "Vibration (mm/s)": 7.3, "Tool wear (min)": 115, "Downtime (hrs/30d)": 6, "Failure risk score": 69, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-043", "Line": "Line D", "Temperature (°C)": 89.4, "Vibration (mm/s)": 1.5, "Tool wear (min)": 80, "Downtime (hrs/30d)": 13, "Failure risk score": 73, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-044", "Line": "Line B", "Temperature (°C)": 65.7, "Vibration (mm/s)": 3.9, "Tool wear (min)": 120, "Downtime (hrs/30d)": 4, "Failure risk score": 48, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-045", "Line": "Line A", "Temperature (°C)": 86.3, "Vibration (mm/s)": 7.3, "Tool wear (min)": 22, "Downtime (hrs/30d)": 11, "Failure risk score": 74, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-046", "Line": "Line C", "Temperature (°C)": 69.7, "Vibration (mm/s)": 7.2, "Tool wear (min)": 82, "Downtime (hrs/30d)": 12, "Failure risk score": 75, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-047", "Line": "Line C", "Temperature (°C)": 88.8, "Vibration (mm/s)": 8.1, "Tool wear (min)": 95, "Downtime (hrs/30d)": 16, "Failure risk score": 84, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}, {"Machine": "MCH-048", "Line": "Line A", "Temperature (°C)": 69.3, "Vibration (mm/s)": 6.1, "Tool wear (min)": 23, "Downtime (hrs/30d)": 11, "Failure risk score": 46, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-049", "Line": "Line A", "Temperature (°C)": 71.7, "Vibration (mm/s)": 2.8, "Tool wear (min)": 149, "Downtime (hrs/30d)": 3, "Failure risk score": 57, "Priority": "Medium", "Recommended action": "Schedule preventive inspection"}, {"Machine": "MCH-050", "Line": "Line B", "Temperature (°C)": 96.2, "Vibration (mm/s)": 8.1, "Tool wear (min)": 46, "Downtime (hrs/30d)": 0, "Failure risk score": 75, "Priority": "High", "Recommended action": "Inspect bearings, lubrication and sensor history"}];
+const initialData=JSON.parse(JSON.stringify(data));
+const priorityField="Priority";
+function num(v){const x=Number(v);return Number.isFinite(x)?x:0}
+function avg(arr,key){return arr.length?arr.reduce((s,r)=>s+num(r[key]),0)/arr.length:0}
+function countHigh(arr){return arr.filter(r=>r.Priority==="High").length}
+function metricValues(arr){
+ const k=CONFIG.metricKeys;
+ const values=[];
+ for(let i=0;i<4;i++){
+  let val=0;
+  if(k[i]==="count")val=arr.length;
+  else if(k[i]==="high")val=countHigh(arr);
+  else if(k[i]==="engagement")val=avg(arr,"Engagement (/100)").toFixed(1);
+  else if(k[i]==="overtime")val=arr.length?(arr.filter(r=>r.Overtime==="Yes").length/arr.length*100).toFixed(1):0;
+  else if(k[i]==="gap")val=arr.reduce((s,r)=>s+num(r["Skill gap"]),0);
+  else if(k[i]==="deadline")val=avg(arr,"Deadline (days)").toFixed(1);
+  else if(k[i]==="workload")val=avg(arr,"Workload index").toFixed(1);
+  else if(k[i]==="completion")val=avg(arr,"Tasks on time (%)").toFixed(1);
+  else if(k[i]==="risk")val=avg(arr,"Risk score").toFixed(1);
+  else if(k[i]==="delay")val=avg(arr,"Delay (days)").toFixed(1);
+  else if(k[i]==="downtime")val=arr.reduce((s,r)=>s+num(r["Downtime (hrs/30d)"]),0).toFixed(0);
+  else if(k[i]==="cover")val=avg(arr,"Days of cover").toFixed(1);
+  else if(k[i]==="demand")val=avg(arr,"Daily demand (units)").toFixed(1);
+  values.push(val);
+ }
+ return values;
+}
+function filtered(){
+ const term=document.getElementById("search").value.toLowerCase();
+ const risk=document.getElementById("riskFilter").value;
+ return data.filter(r=>(risk==="All"||r.Priority===risk)&&Object.values(r).some(v=>String(v).toLowerCase().includes(term)));
+}
+function render(){
+ const arr=filtered();
+ const vals=metricValues(arr);
+ document.getElementById("metrics").innerHTML=CONFIG.metricLabels.map((label,i)=>`<div class="metric"><div class="label">${label}</div><strong>${vals[i]}${CONFIG.unit[i]}</strong><small>${i===0?"Records matching current filters":i===1?"High-priority records in current view":"Calculated from visible records"}</small></div>`).join("");
+ const chartKey=CONFIG.chart;
+ const groups={};
+ arr.forEach(r=>{const key=r[chartKey]??"Unknown"; if(!groups[key])groups[key]=[];groups[key].push(r)});
+ let chartData=Object.entries(groups).map(([label,rows])=>({label,rows,value:
+   chartKey==="Priority"?rows.length:
+   chartKey==="Required skill"?rows.reduce((s,r)=>s+num(r["Skill gap"]),0):
+   chartKey==="Team"?avg(rows,"Workload index"):
+   chartKey==="Supplier / carrier"?avg(rows,"Risk score"):
+   chartKey==="Machine"?avg(rows,"Failure risk score"):
+   avg(rows,"Days of cover")
+ }));
+ chartData.sort((a,b)=>b.value-a.value);
+ if(CONFIG.chart==="Machine") chartData=chartData.slice(0,10);
+ if(chartData.length===0) document.getElementById("chart").innerHTML='<div class="empty">No matching data.</div>';
+ else {
+  const max=Math.max(1,...chartData.map(d=>d.value));
+  document.getElementById("chart").innerHTML=chartData.map(d=>`<div class="chart-row"><span title="${d.label}">${d.label}</span><div class="track"><div class="bar" style="width:${Math.max(2,d.value/max*100)}%"></div></div><b>${Number(d.value).toFixed(1).replace(/\.0$/,"")}</b></div>`).join("");
+ }
+ document.getElementById("insight").textContent=arr.length?CONFIG.insight:"No records match these filters. Clear the search or select another priority.";
+ document.getElementById("rowCount").textContent=arr.length+" of "+data.length+" records";
+ const cols=arr.length?Object.keys(arr[0]):Object.keys(data[0]||{});
+ document.getElementById("thead").innerHTML="<tr>"+cols.map(k=>`<th>${k}</th>`).join("")+"</tr>";
+ document.getElementById("tbody").innerHTML=arr.length?arr.map(r=>"<tr>"+cols.map(k=>`<td>${k==="Priority"?`<span class="risk ${r[k]}">${r[k]}</span>`:String(r[k])}</td>`).join("")+"</tr>").join(""):'<tr><td class="empty" colspan="12">No records match your filters.</td></tr>';
+}
+function refreshData(){
+ // A local demo refresh: small synthetic fluctuations, never a live API update.
+ data=data.map(r=>{
+  const copy={...r};
+  if(copy["Engagement (/100)"]!==undefined) copy["Engagement (/100)"]=Math.max(20,Math.min(100,num(copy["Engagement (/100)"])+(Math.random()>.5?1:-1)*Math.ceil(Math.random()*3)));
+  if(copy["Workload index"]!==undefined) copy["Workload index"]=Math.max(20,Math.min(100,num(copy["Workload index"])+Math.round(Math.random()*4-2)));
+  if(copy["Delay (days)"]!==undefined) copy["Delay (days)"]=Math.max(0,num(copy["Delay (days)"])+Math.round(Math.random()*2-1));
+  if(copy["Temperature (°C)"]!==undefined) copy["Temperature (°C)"]=+(num(copy["Temperature (°C)"])+(Math.random()-.5)*1.2).toFixed(1);
+  if(copy["On hand (units)"]!==undefined) copy["On hand (units)"]=Math.max(0,num(copy["On hand (units)"])+Math.round(Math.random()*10-5));
+  return copy;
+ });
+ const now=new Date();
+ document.getElementById("lastRefresh").textContent=now.toLocaleTimeString();
+ document.getElementById("refreshStatus").textContent="Demo refreshed locally · "+now.toLocaleTimeString();
+ render();
+}
+function exportCSV(){
+ const arr=filtered(); if(!arr.length){alert("No rows to export.");return}
+ const cols=Object.keys(arr[0]);
+ const csv=[cols,...arr.map(r=>cols.map(k=>String(r[k]??"").replaceAll('"','""')))].map(row=>row.map(v=>`"${v}"`).join(",")).join("\r\n");
+ const blob=new Blob([csv],{type:"text/csv;charset=utf-8;"});const url=URL.createObjectURL(blob);
+ const a=document.createElement("a");a.href=url;a.download="Q9_synthetic_dashboard_data.csv";a.click();URL.revokeObjectURL(url);
+}
+document.getElementById("lastRefresh").textContent=new Date().toLocaleTimeString();
+render();
+</script></body></html>

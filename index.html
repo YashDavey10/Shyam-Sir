@@ -1,0 +1,2088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Marketing Funnel Intelligence & Value Leakage Dashboard | Executive C-Suite</title>
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Inter Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            navy: {
+              800: '#0f172a',
+              900: '#090d16',
+              950: '#040711'
+            },
+            leak: {
+              red: '#ef4444',
+              orange: '#f97316',
+              amber: '#f59e0b'
+            },
+            exec: {
+              blue: '#2563eb',
+              emerald: '#10b981',
+              violet: '#8b5cf6',
+              cyan: '#06b6d4'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background-color: #0b0f19;
+      color: #f1f5f9;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .glass-card {
+      background: rgba(17, 24, 39, 0.78);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
+    .glass-card-leak {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(17, 24, 39, 0.85) 100%);
+      border: 1px solid rgba(239, 68, 68, 0.35);
+      box-shadow: 0 0 25px -5px rgba(239, 68, 68, 0.2);
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(100, 116, 139, 0.5);
+      border-radius: 3px;
+    }
+    .funnel-trapezoid {
+      clip-path: polygon(0 0, 100% 0, 85% 100%, 15% 100%);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .pulse-glow {
+      animation: pulseGlow 2.5s infinite;
+    }
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.2); }
+      50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.55); }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- TOP EXECUTIVE BANNER -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-[1720px] mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center space-x-4">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-blue-500/25">
+          <i class="fa-solid fa-filter-circle-dollar text-white text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-xl font-bold tracking-tight text-white">Marketing Funnel & Value Leakage Intelligence</h1>
+            <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+              Leakage Detected: Lead Quality Trap
+            </span>
+          </div>
+          <p class="text-xs text-slate-400">Executive Diagnostics: Tracing Journey from Impression to Revenue & Diagnosing Stagnant Growth</p>
+        </div>
+      </div>
+
+      <!-- Action Buttons & Status -->
+      <div class="flex items-center space-x-3">
+        <div class="hidden md:flex items-center gap-2 bg-slate-800/80 px-3 py-1.5 rounded-lg border border-slate-700/60 text-xs">
+          <span class="text-slate-400">Analysis Cohort:</span>
+          <span class="font-semibold text-blue-400" id="headerDateRange">Full Year 2026 (Jan - Dec)</span>
+        </div>
+        <button onclick="exportCSV()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-download"></i> Export Records
+        </button>
+        <button onclick="window.print()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-medium text-slate-200 border border-slate-700 flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-print"></i> Print Executive PDF
+        </button>
+        <button onclick="resetAllFilters()" class="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-xs font-semibold text-white shadow-md shadow-blue-600/30 flex items-center gap-1.5 transition">
+          <i class="fa-solid fa-rotate-left"></i> Reset Filters
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-[1720px] mx-auto px-4 sm:px-6 py-6 space-y-6 flex-1 w-full">
+
+    <!-- CRITICAL MANAGEMENT PROBLEM STATEMENT ACCORDION / CALLOUT -->
+    <div class="glass-card-leak rounded-2xl p-5 relative overflow-hidden">
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div class="flex items-start space-x-4">
+          <div class="w-12 h-12 rounded-xl bg-red-500/20 border border-red-500/40 flex items-center justify-center shrink-0 text-red-400 text-2xl">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-bold uppercase tracking-wider text-red-400">Core Strategic Dilemma</span>
+              <span class="text-xs bg-slate-800 px-2 py-0.5 rounded text-slate-300">Management Finding</span>
+            </div>
+            <h2 class="text-lg font-bold text-white mt-0.5">High Lead Generation (+88%) Is Not Translating Into Proportional Revenue (+14%)</h2>
+            <p class="text-sm text-slate-300 mt-1 max-w-4xl leading-relaxed">
+              Top-of-funnel lead expansion was heavily fueled by low-intent paid social (Meta Ads) and broad display campaigns. While overall lead count surged, qualification rates plummeted from <span class="text-white font-semibold">43.9%</span> down to <span class="text-red-400 font-semibold">28.3%</span>, average deal value dropped by <span class="text-red-400 font-semibold">-58%</span>, and SDR capacity was overwhelmed with low-ICP contacts, creating severe pipeline leakage between <span class="text-yellow-400 font-semibold">Lead &rarr; MQL</span> and <span class="text-yellow-400 font-semibold">MQL &rarr; Opportunity</span>.
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0">
+          <a href="#section-ai-insights" class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold text-xs transition shadow-lg shadow-red-600/30 flex items-center gap-2">
+            <i class="fa-solid fa-microchip"></i> Jump to AI Root Cause Diagnosis
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- 12. INTERACTIVE FILTERS BAR -->
+    <div class="glass-card rounded-2xl p-5">
+      <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-2">
+        <div class="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-slate-400">
+          <i class="fa-solid fa-sliders text-blue-500"></i>
+          <span>Multi-Dimensional Filtering & Cohort Slice</span>
+        </div>
+        <span class="text-xs text-slate-400" id="activeFilterCountBadge">All 12,000 Records Active</span>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <!-- Date / Month -->
+        <div>
+          <label class="block text-[11px] font-medium text-slate-400 mb-1">Time Horizon</label>
+          <select id="filterMonth" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+            <option value="ALL">All Months (2026)</option>
+            <option value="Q1">Q1 (Jan - Mar)</option>
+            <option value="Q2">Q2 (Apr - Jun)</option>
+            <option value="Q3">Q3 (Jul - Sep)</option>
+            <option value="Q4">Q4 (Oct - Dec)</option>
+            <option value="2026-01">Jan 2026</option>
+            <option value="2026-02">Feb 2026</option>
+            <option value="2026-03">Mar 2026</option>
+            <option value="2026-04">Apr 2026</option>
+            <option value="2026-05">May 2026</option>
+            <option value="2026-06">Jun 2026</option>
+            <option value="2026-07">Jul 2026</option>
+            <option value="2026-08">Aug 2026</option>
+            <option value="2026-09">Sep 2026</option>
+            <option value="2026-10">Oct 2026</option>
+            <option value="2026-11">Nov 2026</option>
+            <option value="2026-12">Dec 2026</option>
+          </select>
+        </div>
+
+        <!-- Channel -->
+        <div>
+          <label class="block text-[11px] font-medium text-slate-400 mb-1">Channel</label>
+          <select id="filterChannel" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+            <option value="ALL">All Channels (6)</option>
+            <option value="Google Ads">Google Ads</option>
+            <option value="Meta Ads">Meta Ads</option>
+            <option value="LinkedIn">LinkedIn</option>
+            <option value="Email">Email</option>
+            <option value="Organic Search">Organic Search</option>
+            <option value="Referral">Referral</option>
+          </select>
+        </div>
+
+        <!-- Campaign Type -->
+        <div>
+          <label class="block text-[11px] font-medium text-slate-400 mb-1">Campaign Type</label>
+          <select id="filterCampaignType" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+            <option value="ALL">All Types</option>
+            <option value="Search">Search</option>
+            <option value="Social">Social</option>
+            <option value="ABM">ABM</option>
+            <option value="Display">Display</option>
+            <option value="Retargeting">Retargeting</option>
+            <option value="Content">Content / Research</option>
+            <option value="Inbound">Inbound SEO</option>
+            <option value="Email">Email</option>
+            <option value="Partner">Partner / Referral</option>
+            <option value="Advocacy">Advocacy</option>
+          </select>
+        </div>
+
+        <!-- Campaign -->
+        <div>
+          <label class="block text-[11px] font-medium text-slate-400 mb-1">Specific Campaign</label>
+          <select id="filterCampaign" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+            <option value="ALL">All 15 Campaigns</option>
+          </select>
+        </div>
+
+        <!-- Customer Segment -->
+        <div>
+          <label class="block text-[11px] font-medium text-slate-400 mb-1">Customer Segment</label>
+          <select id="filterSegment" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+            <option value="ALL">All Segments</option>
+            <option value="Enterprise">Enterprise ($100M+)</option>
+            <option value="Mid-Market">Mid-Market ($10M-$100M)</option>
+            <option value="SMB">SMB (&lt;$10M)</option>
+          </select>
+        </div>
+
+        <!-- Geography -->
+        <div>
+          <label class="block text-[11px] font-medium text-slate-400 mb-1">Geography</label>
+          <select id="filterGeo" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+            <option value="ALL">All Geographies</option>
+            <option value="North America">North America</option>
+            <option value="EMEA">EMEA</option>
+            <option value="APAC">APAC</option>
+            <option value="LATAM">LATAM</option>
+          </select>
+        </div>
+
+        <!-- Stage Status -->
+        <div>
+          <label class="block text-[11px] font-medium text-slate-400 mb-1">Journey Stage</label>
+          <select id="filterStage" onchange="applyFilters()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500">
+            <option value="ALL">All Stages</option>
+            <option value="Lead">Dropped at Lead</option>
+            <option value="Qualified Lead">Qualified Lead (MQL)</option>
+            <option value="Opportunity">Sales Opportunity (SQL)</option>
+            <option value="Customer (Won)">Won Customer</option>
+          </select>
+        </div>
+
+        <!-- Quick Reset -->
+        <div class="flex items-end">
+          <button onclick="resetAllFilters()" class="w-full py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg text-xs font-medium text-slate-300 transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-filter-circle-xmark"></i> Clear Filters
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 11. MANAGEMENT ALERTS (AUTOMATIC REAL-TIME SYSTEM) -->
+    <div class="space-y-2">
+      <div class="flex items-center justify-between">
+        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+          <i class="fa-solid fa-bell text-amber-500"></i> Real-Time Strategic Management Alerts
+        </h3>
+        <span class="text-xs text-slate-500">Dynamic trigger based on current active filter parameters</span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-3" id="managementAlertsContainer">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+
+    <!-- 1. EXECUTIVE OVERVIEW (12 KPI CARDS) -->
+    <section>
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
+          <i class="fa-solid fa-chart-pie text-blue-500"></i> Section 1: Executive KPI Scorecard (12 C-Suite Metrics)
+        </h3>
+        <span class="text-xs text-slate-400 font-mono">Live Recalculation Engine</span>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-3.5">
+        <!-- 1. Impressions -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Impressions</div>
+          <div class="text-2xl font-extrabold text-white mt-1" id="kpiImpressions">--</div>
+          <div class="flex items-center text-[11px] text-slate-400 mt-1 gap-1">
+            <i class="fa-solid fa-eye text-blue-400"></i> Campaign Reach
+          </div>
+        </div>
+
+        <!-- 2. Clicks -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Clicks (CTR)</div>
+          <div class="text-2xl font-extrabold text-white mt-1" id="kpiClicks">--</div>
+          <div class="flex items-center text-[11px] text-emerald-400 mt-1 gap-1">
+            <span id="kpiCTR">--% CTR</span>
+          </div>
+        </div>
+
+        <!-- 3. Total Leads -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden border-l-4 border-l-blue-500">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Leads Generated</div>
+          <div class="text-2xl font-extrabold text-blue-400 mt-1" id="kpiTotalLeads">--</div>
+          <div class="flex items-center text-[11px] text-amber-400 mt-1 gap-1">
+            <i class="fa-solid fa-arrow-trend-up"></i> +88% surge YoY
+          </div>
+        </div>
+
+        <!-- 4. Qualified Leads -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Qualified Leads (MQL)</div>
+          <div class="text-2xl font-extrabold text-white mt-1" id="kpiQualifiedLeads">--</div>
+          <div class="flex items-center text-[11px] text-red-400 mt-1 gap-1">
+            <i class="fa-solid fa-arrow-trend-down"></i> <span id="kpiQualRate">--% Qual Rate</span>
+          </div>
+        </div>
+
+        <!-- 5. Opportunities -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Sales Opportunities</div>
+          <div class="text-2xl font-extrabold text-white mt-1" id="kpiOpportunities">--</div>
+          <div class="flex items-center text-[11px] text-slate-400 mt-1 gap-1">
+            <span id="kpiOppRate">--% of MQL</span>
+          </div>
+        </div>
+
+        <!-- 6. Converted Customers -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden border-l-4 border-l-emerald-500">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Converted Customers</div>
+          <div class="text-2xl font-extrabold text-emerald-400 mt-1" id="kpiConvertedCustomers">--</div>
+          <div class="flex items-center text-[11px] text-slate-400 mt-1 gap-1">
+            <span id="kpiWinRate">--% of Opps</span>
+          </div>
+        </div>
+
+        <!-- 7. Conversion Rate -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Overall Conv Rate</div>
+          <div class="text-2xl font-extrabold text-white mt-1" id="kpiConversionRate">--%</div>
+          <div class="flex items-center text-[11px] text-red-400 mt-1 gap-1">
+            <i class="fa-solid fa-triangle-exclamation"></i> Lead &rarr; Customer
+          </div>
+        </div>
+
+        <!-- 8. Total Revenue -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden border-l-4 border-l-emerald-400">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Total Pipeline Revenue</div>
+          <div class="text-2xl font-extrabold text-emerald-300 mt-1" id="kpiTotalRevenue">--</div>
+          <div class="flex items-center text-[11px] text-slate-400 mt-1 gap-1">
+            <span>Closed-Won Deals</span>
+          </div>
+        </div>
+
+        <!-- 9. Avg Rev per Customer (ACV) -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Avg Rev / Customer (ACV)</div>
+          <div class="text-2xl font-extrabold text-white mt-1" id="kpiAvgRevenueCustomer">--</div>
+          <div class="flex items-center text-[11px] text-slate-400 mt-1 gap-1">
+            <span>Deal size spread: $4k - $48k</span>
+          </div>
+        </div>
+
+        <!-- 10. Cost per Lead (CPL) -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Cost per Lead (CPL)</div>
+          <div class="text-2xl font-extrabold text-white mt-1" id="kpiCostPerLead">--</div>
+          <div class="flex items-center text-[11px] text-amber-400 mt-1 gap-1">
+            <span>Deceptively low on paid social</span>
+          </div>
+        </div>
+
+        <!-- 11. Customer Acquisition Cost (CAC) -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Customer Acquisition Cost</div>
+          <div class="text-2xl font-extrabold text-white mt-1" id="kpiCAC">--</div>
+          <div class="flex items-center text-[11px] text-slate-400 mt-1 gap-1">
+            <span>Blended Sales & Marketing</span>
+          </div>
+        </div>
+
+        <!-- 12. Marketing ROI -->
+        <div class="glass-card rounded-xl p-4 relative overflow-hidden border-l-4 border-l-violet-500">
+          <div class="text-[11px] font-semibold text-slate-400 uppercase tracking-wider">Marketing ROI</div>
+          <div class="text-2xl font-extrabold text-violet-400 mt-1" id="kpiMarketingROI">--%</div>
+          <div class="flex items-center text-[11px] text-slate-400 mt-1 gap-1">
+            <span>Spend: <strong id="kpiTotalSpend" class="text-slate-300">--</strong></span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. MARKETING FUNNEL & VALUE LEAKAGE (VISUAL FUNNEL + LEAKAGE DETECTOR) -->
+    <section class="glass-card rounded-2xl p-6 relative">
+      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 border-b border-slate-800 pb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-base font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-filter text-blue-500"></i> Section 2: End-to-End Marketing Funnel & Stage Drop-Off Analysis
+            </h3>
+            <span class="px-2.5 py-0.5 rounded bg-red-500/20 text-red-400 text-xs font-bold border border-red-500/30">
+              <i class="fa-solid fa-burst"></i> Value Leakage Stage Highlighted
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Absolute volume, stage-to-stage transition conversion rate, and value attrition at each milestone</p>
+        </div>
+        <div class="flex items-center gap-4 text-xs">
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-blue-500"></span> Volume In</div>
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-red-500"></span> Critical Leakage Zone</div>
+          <div class="flex items-center gap-1.5"><span class="w-3 h-3 rounded bg-emerald-500"></span> Final Won Revenue</div>
+        </div>
+      </div>
+
+      <!-- Funnel Stage Blocks Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-7 gap-3 relative">
+        
+        <!-- Step 1: Impressions -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+          <div>
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold mb-1">
+              <span>Stage 1</span>
+              <i class="fa-solid fa-bullhorn text-blue-400"></i>
+            </div>
+            <div class="text-sm font-bold text-white">Campaign Impressions</div>
+            <div class="text-xl font-extrabold text-blue-400 mt-2 font-mono" id="funnelImp">9.69M</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">100% Top-of-Funnel</div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400">
+            Next Stage CTR: <strong class="text-white" id="funnelImpCTR">3.07%</strong>
+          </div>
+        </div>
+
+        <!-- Step 2: Clicks -->
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-4 flex flex-col justify-between hover:border-slate-700 transition">
+          <div>
+            <div class="flex items-center justify-between text-xs text-slate-400 font-semibold mb-1">
+              <span>Stage 2</span>
+              <i class="fa-solid fa-arrow-pointer text-indigo-400"></i>
+            </div>
+            <div class="text-sm font-bold text-white">Ad / Page Clicks</div>
+            <div class="text-xl font-extrabold text-indigo-400 mt-2 font-mono" id="funnelClicks">297,000</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Engagement Baseline</div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400">
+            Click-to-Lead: <strong class="text-white" id="funnelClickToLead">4.04%</strong>
+          </div>
+        </div>
+
+        <!-- Step 3: Leads -->
+        <div class="bg-slate-900/90 border border-blue-500/50 rounded-xl p-4 flex flex-col justify-between hover:border-blue-400 transition bg-gradient-to-b from-blue-950/20 to-slate-900/90">
+          <div>
+            <div class="flex items-center justify-between text-xs text-blue-400 font-semibold mb-1">
+              <span>Stage 3</span>
+              <i class="fa-solid fa-address-card text-blue-400"></i>
+            </div>
+            <div class="text-sm font-bold text-white">Leads Generated</div>
+            <div class="text-xl font-extrabold text-blue-300 mt-2 font-mono" id="funnelLeads">12,000</div>
+            <div class="text-[11px] text-amber-300 mt-0.5 font-semibold">High Volume Influx</div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400">
+            Pass-through: <strong class="text-amber-400" id="funnelLeadToQual">35.7%</strong>
+          </div>
+        </div>
+
+        <!-- Step 4: Qualified Leads (CRITICAL LEAKAGE POINT 1) -->
+        <div class="glass-card-leak rounded-xl p-4 flex flex-col justify-between relative overflow-hidden pulse-glow border-2 border-red-500">
+          <div class="absolute -top-3 -right-3 bg-red-600 text-white text-[9px] font-black uppercase px-4 py-1 rotate-12 shadow">
+            Leakage #1
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-xs text-red-300 font-semibold mb-1">
+              <span>Stage 4</span>
+              <i class="fa-solid fa-id-badge text-red-400"></i>
+            </div>
+            <div class="text-sm font-bold text-white">Qualified Leads (MQL)</div>
+            <div class="text-xl font-extrabold text-red-300 mt-2 font-mono" id="funnelQual">4,280</div>
+            <div class="text-[11px] text-red-300 font-semibold mt-0.5">
+              -64.3% Disqualified
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-red-500/30 text-[11px] text-red-200">
+            MQL &rarr; SQL: <strong class="text-yellow-300" id="funnelQualToOpp">39.0%</strong>
+          </div>
+        </div>
+
+        <!-- Step 5: Opportunities (CRITICAL LEAKAGE POINT 2) -->
+        <div class="glass-card-leak rounded-xl p-4 flex flex-col justify-between relative overflow-hidden pulse-glow border-2 border-red-500">
+          <div class="absolute -top-3 -right-3 bg-red-600 text-white text-[9px] font-black uppercase px-4 py-1 rotate-12 shadow">
+            Leakage #2
+          </div>
+          <div>
+            <div class="flex items-center justify-between text-xs text-red-300 font-semibold mb-1">
+              <span>Stage 5</span>
+              <i class="fa-solid fa-briefcase text-amber-400"></i>
+            </div>
+            <div class="text-sm font-bold text-white">Sales Opportunities</div>
+            <div class="text-xl font-extrabold text-amber-300 mt-2 font-mono" id="funnelOpp">1,668</div>
+            <div class="text-[11px] text-red-300 font-semibold mt-0.5">
+              -61.0% SDR Rejection
+            </div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-red-500/30 text-[11px] text-amber-200">
+            Opp &rarr; Won: <strong class="text-emerald-400" id="funnelOppToWon">31.4%</strong>
+          </div>
+        </div>
+
+        <!-- Step 6: Conversions -->
+        <div class="bg-slate-900/90 border border-emerald-500/40 rounded-xl p-4 flex flex-col justify-between hover:border-emerald-400 transition bg-gradient-to-b from-emerald-950/20 to-slate-900/90">
+          <div>
+            <div class="flex items-center justify-between text-xs text-emerald-400 font-semibold mb-1">
+              <span>Stage 6</span>
+              <i class="fa-solid fa-handshake text-emerald-400"></i>
+            </div>
+            <div class="text-sm font-bold text-white">Won Customers</div>
+            <div class="text-xl font-extrabold text-emerald-400 mt-2 font-mono" id="funnelWon">524</div>
+            <div class="text-[11px] text-emerald-300/80 mt-0.5">End-to-End: <span id="funnelOverallConv">4.37%</span></div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400">
+            Avg Deal: <strong class="text-emerald-300" id="funnelAvgDeal">$31,859</strong>
+          </div>
+        </div>
+
+        <!-- Step 7: Revenue -->
+        <div class="bg-gradient-to-br from-emerald-950/40 via-slate-900/90 to-slate-900/90 border border-emerald-500/60 rounded-xl p-4 flex flex-col justify-between shadow-lg shadow-emerald-900/20">
+          <div>
+            <div class="flex items-center justify-between text-xs text-emerald-300 font-semibold mb-1">
+              <span>Stage 7</span>
+              <i class="fa-solid fa-sack-dollar text-emerald-300"></i>
+            </div>
+            <div class="text-sm font-bold text-white">Recognized Revenue</div>
+            <div class="text-xl font-extrabold text-emerald-300 mt-2 font-mono" id="funnelRev">$16.69M</div>
+            <div class="text-[11px] text-slate-400 mt-0.5">Marketing ROI: <span class="text-violet-300 font-semibold" id="funnelROI">3,610%</span></div>
+          </div>
+          <div class="mt-4 pt-3 border-t border-emerald-800/40 text-[11px] text-emerald-200">
+            Rev / Lead: <strong class="text-white" id="funnelRevPerLead">$1,391</strong>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Leakage Callout Box -->
+      <div class="mt-5 p-4 rounded-xl bg-slate-900/80 border border-red-500/40 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div class="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center text-red-400 shrink-0">
+            <i class="fa-solid fa-arrow-down-wide-short"></i>
+          </div>
+          <div>
+            <div class="text-xs font-bold text-white">Funnel Diagnosis: Massive Dual Bottleneck in Top-of-Funnel Filtering</div>
+            <div class="text-xs text-slate-300 mt-0.5" id="leakageExplanation">
+              Out of 12,000 total leads generated, <span class="text-red-400 font-semibold">7,720 leads (64.3%)</span> failed qualification criteria, and a further <span class="text-red-400 font-semibold">2,612 qualified leads (61.0%)</span> failed to convert into sales opportunities. The root cause is high-volume, low-intent paid social (Meta Ads) and broad display ads yielding micro-SMB leads with $0 budget.
+            </div>
+          </div>
+        </div>
+        <div class="shrink-0 flex items-center gap-2">
+          <span class="text-xs text-slate-400">Estimated Pipeline Lost:</span>
+          <span class="text-sm font-bold font-mono text-red-400" id="estimatedLostPipeline">$41.2M</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. CHANNEL ANALYSIS & 5. LEAD QUALITY ANALYSIS (SIDE BY SIDE) -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- 4. CHANNEL ANALYSIS (Lead Volume vs. Revenue Contribution Paradox) -->
+      <section class="glass-card rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-code-compare text-blue-500"></i> Section 4: Channel Paradox — Volume vs. Revenue Share
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Comparing lead share (%) against actual revenue contribution (%) across 6 channels</p>
+          </div>
+          <span class="text-xs text-amber-400 font-medium bg-amber-500/10 px-2 py-1 rounded border border-amber-500/20">
+            Volume &ne; Value
+          </span>
+        </div>
+
+        <div class="h-80 relative">
+          <canvas id="channelShareChart"></canvas>
+        </div>
+
+        <div class="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs" id="channelMetricsMiniGrid">
+          <!-- Populated via JS -->
+        </div>
+      </section>
+
+      <!-- 5. LEAD QUALITY SCATTER PLOT -->
+      <section class="glass-card rounded-2xl p-6">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-braille text-indigo-400"></i> Section 5: Lead Volume vs. Revenue Scatter Plot
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">X: Lead Volume | Y: Revenue ($) | Bubble Size: Spend ($) | Color: Channel</p>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">15 Campaigns Mapped</span>
+        </div>
+
+        <div class="h-80 relative">
+          <canvas id="scatterPlotChart"></canvas>
+        </div>
+
+        <div class="mt-4 p-3 rounded-lg bg-slate-900/70 border border-slate-800 text-xs text-slate-300 flex items-center justify-between">
+          <span><strong>Key Insight:</strong> Top-right quadrant (High Volume + High Revenue) is EMPTY. High volume clusters at $0 revenue (Meta Ads), while High Revenue clusters at low volume (LinkedIn & Referral).</span>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 8. SALES FUNNEL BOTTLENECK DIAGNOSTIC (HYPOTHESIS A, B, C, D) & 6. CUSTOMER JOURNEY ATTRITION -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- 8. ROOT CAUSE ENGINE: HYPOTHESIS A, B, C, D -->
+      <section class="glass-card rounded-2xl p-6 lg:col-span-1 border-t-4 border-t-amber-500">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-stethoscope text-amber-400"></i> Section 8: Sales Funnel Diagnostic
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Hypothesis Testing: Where is the Primary Failure?</p>
+          </div>
+        </div>
+
+        <div class="space-y-3.5">
+          <!-- Hypothesis A: Poor Lead Quality -->
+          <div class="p-3.5 rounded-xl bg-red-950/30 border border-red-500/40 relative">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-red-300">Hypothesis A: Poor Lead Quality</span>
+              <span class="text-xs font-black text-red-400 bg-red-500/20 px-2 py-0.5 rounded">PRIMARY ROOT CAUSE (68%)</span>
+            </div>
+            <div class="text-xs text-slate-300 mt-1.5 leading-relaxed">
+              <strong>Confirmed:</strong> Paid social & display generate 4,878 leads with a 9.9% MQL qualification rate. Over 90% lack company domain, buying intent, or ICP size.
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 mt-2">
+              <div class="bg-red-500 h-2 rounded-full" style="width: 88%"></div>
+            </div>
+          </div>
+
+          <!-- Hypothesis B: Poor SDR Qualification -->
+          <div class="p-3.5 rounded-xl bg-amber-950/20 border border-amber-500/30">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-amber-300">Hypothesis B: Poor Qualification Process</span>
+              <span class="text-xs font-semibold text-amber-400 bg-amber-500/20 px-2 py-0.5 rounded">CONTRIBUTING (22%)</span>
+            </div>
+            <div class="text-xs text-slate-300 mt-1.5 leading-relaxed">
+              <strong>Partial:</strong> MQL &rarr; Opp conversion is 39%. SDR team is overwhelmed by junk leads, delaying follow-up on genuine inbound enterprise leads.
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 mt-2">
+              <div class="bg-amber-400 h-2 rounded-full" style="width: 54%"></div>
+            </div>
+          </div>
+
+          <!-- Hypothesis C: Poor Sales Closing (AE) -->
+          <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">Hypothesis C: Poor Sales Conversion (AE)</span>
+              <span class="text-xs font-semibold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">DISPROVED (Normal)</span>
+            </div>
+            <div class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+              Opportunity &rarr; Customer win rate is <strong>31.4%</strong> (B2B benchmark is 25-30%). When SDRs pass genuine qualified opportunities, Account Executives close them effectively.
+            </div>
+            <div class="w-full bg-slate-800 rounded-full h-2 mt-2">
+              <div class="bg-emerald-500 h-2 rounded-full" style="width: 32%"></div>
+            </div>
+          </div>
+
+          <!-- Hypothesis D: Low Average Deal Value -->
+          <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-slate-300">Hypothesis D: Low Average Deal Value</span>
+              <span class="text-xs font-semibold text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded">CHANNEL SPECIFIC</span>
+            </div>
+            <div class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+              Meta ACV is <strong>$4,200</strong> vs LinkedIn ACV of <strong>$28,500</strong>. High lead influx skewed customer mix towards low-tier SMBs, dragging overall revenue efficiency.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. CUSTOMER JOURNEY ATTRITION & DROP-OFF REASONS -->
+      <section class="glass-card rounded-2xl p-6 lg:col-span-2">
+        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+          <div>
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-route text-cyan-400"></i> Section 6: Customer Journey Drop-Off & Loss Reasons
+            </h3>
+            <p class="text-xs text-slate-400 mt-0.5">Top reasons why prospects disengage at Lead, Qualification, and Opportunity stages</p>
+          </div>
+          <span class="text-xs text-slate-400 font-mono">11,476 Drop-Offs Classified</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="h-72 relative">
+            <canvas id="dropOffReasonsChart"></canvas>
+          </div>
+          <div class="h-72 relative">
+            <canvas id="stageDropOffBarChart"></canvas>
+          </div>
+        </div>
+
+        <div class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+          <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+            <span class="text-slate-400 font-semibold">Top Lead Drop Reason:</span>
+            <div class="text-white font-bold mt-1">Looking for Free Tier / Accidental Click (42%)</div>
+          </div>
+          <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+            <span class="text-slate-400 font-semibold">Top MQL Drop Reason:</span>
+            <div class="text-white font-bold mt-1">No Budget / Micro-SMB Persona (48%)</div>
+          </div>
+          <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+            <span class="text-slate-400 font-semibold">Top Opp Loss Reason:</span>
+            <div class="text-white font-bold mt-1">Competitor Selected / Pricing Friction (38%)</div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+
+    <!-- 9. TIME TREND ANALYSIS (MONTHLY COHORTS & LEAD SURGE VS REVENUE STAGNATION) -->
+    <section class="glass-card rounded-2xl p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-chart-line text-emerald-400"></i> Section 9: 12-Month Time Trend Analysis — The Growth Illusion
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Tracking Leads vs Qualified Leads vs Closed Revenue across 2026</p>
+        </div>
+        <div class="flex items-center gap-4 text-xs font-mono">
+          <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 bg-blue-400 rounded"></span> Total Leads</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 bg-amber-400 rounded"></span> Qualified Leads</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 bg-emerald-400 rounded"></span> Revenue ($)</span>
+          <span class="flex items-center gap-1.5"><span class="w-3 h-1.5 bg-red-400 rounded"></span> Spend ($)</span>
+        </div>
+      </div>
+
+      <div class="h-80 relative">
+        <canvas id="monthlyTrendChart"></canvas>
+      </div>
+
+      <div class="mt-4 p-4 rounded-xl bg-slate-900/90 border border-slate-800 flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
+        <div class="flex items-center gap-3">
+          <i class="fa-solid fa-clock-rotate-left text-blue-400 text-xl"></i>
+          <div>
+            <strong class="text-white">Q3-Q4 Inflection Point:</strong>
+            <span class="text-slate-300">Between July and November, marketing spend scaled by +59% and lead volume surged from 880 to 1,544 leads/mo (+75%), yet monthly closed revenue rose from $1.2M to only $1.8M (+50%), because lead qualification rate decayed from 45% down to 28%.</span>
+          </div>
+        </div>
+        <div class="shrink-0 flex items-center gap-2">
+          <span class="px-2.5 py-1 bg-red-500/20 text-red-300 rounded font-semibold border border-red-500/30">
+            Conversion Rate Drop: 5.9% &rarr; 3.1%
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7. REVENUE ANALYSIS (BY SEGMENT, GEOGRAPHY, CAMPAIGN) -->
+    <section class="glass-card rounded-2xl p-6">
+      <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-layer-group text-violet-400"></i> Section 7: Revenue Segmentation & Average Deal Value Drivers
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Revenue breakdown by Customer Segment, Global Geography, and Deal Value metrics</p>
+        </div>
+        <div class="text-xs text-slate-400 font-mono">Total Revenue: <strong class="text-emerald-400" id="revAnalysisTotal">--</strong></div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Revenue by Segment -->
+        <div>
+          <div class="text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
+            <span>By Customer Segment</span>
+            <span class="text-[11px] text-slate-400 font-mono">ACV Comparison</span>
+          </div>
+          <div class="h-64 relative">
+            <canvas id="segmentRevChart"></canvas>
+          </div>
+          <div class="mt-2 text-center text-xs text-slate-400" id="segmentAnalysisNote">
+            Enterprise accounts account for 68% of revenue despite being only 22% of leads.
+          </div>
+        </div>
+
+        <!-- Revenue by Geography -->
+        <div>
+          <div class="text-xs font-semibold text-slate-300 mb-2 flex items-center justify-between">
+            <span>By Geography</span>
+            <span class="text-[11px] text-slate-400 font-mono">Regional Share</span>
+          </div>
+          <div class="h-64 relative">
+            <canvas id="geoRevChart"></canvas>
+          </div>
+          <div class="mt-2 text-center text-xs text-slate-400" id="geoAnalysisNote">
+            North America and EMEA drive 78% of realized revenue.
+          </div>
+        </div>
+
+        <!-- Deal Value & Efficiency Metrics Card -->
+        <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="text-xs font-bold text-white uppercase tracking-wider mb-3">Unit Economics & Deal Efficiency</div>
+            
+            <div class="space-y-3">
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
+                <span class="text-xs text-slate-400">Average Deal Size (Won):</span>
+                <span class="text-sm font-bold font-mono text-emerald-400" id="metricACV">$31,859</span>
+              </div>
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
+                <span class="text-xs text-slate-400">Revenue per Total Lead:</span>
+                <span class="text-sm font-bold font-mono text-blue-400" id="metricRevPerLead">$1,391</span>
+              </div>
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
+                <span class="text-xs text-slate-400">Revenue per Qualified Lead:</span>
+                <span class="text-sm font-bold font-mono text-indigo-400" id="metricRevPerQual">$3,900</span>
+              </div>
+              <div class="flex items-center justify-between p-2.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
+                <span class="text-xs text-slate-400">Revenue per Opportunity:</span>
+                <span class="text-sm font-bold font-mono text-amber-400" id="metricRevPerOpp">$10,008</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-800 text-[11px] text-slate-400">
+            <strong>Strategic Imperative:</strong> Increasing Qualified Lead % by just 10% generates more incremental revenue than doubling total raw leads from social channels.
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. CAMPAIGN PERFORMANCE (COMPARATIVE MATRIX) -->
+    <section class="glass-card rounded-2xl p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-table-cells-large text-indigo-400"></i> Section 3: Campaign Performance Matrix (15 Campaigns)
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Comprehensive audit: Spend, Leads, Qual %, Opp %, Conv %, Revenue, CPL, CAC, and ROI</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <input type="text" id="campaignSearchInput" onkeyup="searchCampaignTable()" placeholder="Search campaign..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-blue-500 w-48">
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-left text-xs" id="campaignPerformanceTable">
+          <thead class="bg-slate-900/90 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+            <tr>
+              <th class="py-3 px-3">Campaign</th>
+              <th class="py-3 px-2">Channel</th>
+              <th class="py-3 px-2">Type</th>
+              <th class="py-3 px-2 text-right">Spend</th>
+              <th class="py-3 px-2 text-right">Leads</th>
+              <th class="py-3 px-2 text-right">Qual Rate</th>
+              <th class="py-3 px-2 text-right">Opp Rate</th>
+              <th class="py-3 px-2 text-right">Conv Rate</th>
+              <th class="py-3 px-2 text-right">Won</th>
+              <th class="py-3 px-3 text-right">Revenue</th>
+              <th class="py-3 px-2 text-right">CPL</th>
+              <th class="py-3 px-2 text-right">CAC</th>
+              <th class="py-3 px-3 text-right">ROI</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 font-mono" id="campaignTableBody">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 10. AI INSIGHTS ENGINE (STRUCTURED MANAGEMENT SUMMARY) -->
+    <section id="section-ai-insights" class="glass-card rounded-2xl p-6 border-l-4 border-l-blue-500">
+      <div class="flex items-center justify-between mb-5 border-b border-slate-800 pb-3">
+        <div class="flex items-center space-x-3">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
+            <i class="fa-solid fa-brain"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-white">Section 10: AI Executive Management Brief</h3>
+            <p class="text-xs text-slate-400">Synthesized diagnostic derived from actual funnel telemetry and multi-touch data</p>
+          </div>
+        </div>
+        <span class="text-xs px-2.5 py-1 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20 font-mono">
+          Agentic AI Engine v3.8 Active
+        </span>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="aiInsightsGrid">
+        <!-- 1. WHAT IS HAPPENING -->
+        <div class="bg-slate-900/90 rounded-xl p-4 border border-slate-800 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-blue-400 mb-2">
+              <i class="fa-solid fa-chart-simple"></i>
+              <span>What Is Happening</span>
+            </div>
+            <div class="text-xs text-slate-300 leading-relaxed space-y-2" id="aiWhatIsHappening">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. WHERE VALUE IS BEING LOST -->
+        <div class="bg-slate-900/90 rounded-xl p-4 border border-red-500/40 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-red-400 mb-2">
+              <i class="fa-solid fa-water-ladder"></i>
+              <span>Where Value Is Being Lost</span>
+            </div>
+            <div class="text-xs text-slate-300 leading-relaxed space-y-2" id="aiWhereValueLost">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. WHY IT MAY BE HAPPENING -->
+        <div class="bg-slate-900/90 rounded-xl p-4 border border-amber-500/40 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-amber-400 mb-2">
+              <i class="fa-solid fa-lightbulb"></i>
+              <span>Why It May Be Happening</span>
+            </div>
+            <div class="text-xs text-slate-300 leading-relaxed space-y-2" id="aiWhyHappening">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. WHAT MANAGEMENT SHOULD INVESTIGATE -->
+        <div class="bg-slate-900/90 rounded-xl p-4 border border-emerald-500/40 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-emerald-400 mb-2">
+              <i class="fa-solid fa-list-check"></i>
+              <span>What Management Should Investigate</span>
+            </div>
+            <div class="text-xs text-slate-300 leading-relaxed space-y-2" id="aiWhatToInvestigate">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- STRATEGIC SCENARIO SIMULATOR (WHAT-IF BUDGET REALLOCATION ENGINE) -->
+    <section class="glass-card rounded-2xl p-6 border border-indigo-500/30">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+              <i class="fa-solid fa-wand-magic-sparkles text-indigo-400"></i> Executive Decision Simulator: Budget Reallocation
+            </h3>
+            <span class="text-[10px] font-semibold uppercase bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded">Actionable Strategic Tool</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-0.5">Test shifting marketing spend from negative-ROI vanity lead channels to high-intent pipeline engines</p>
+        </div>
+        <button onclick="runSimulation()" class="px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition shadow-md shadow-indigo-600/30">
+          Recalculate Impact
+        </button>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Reallocate from Meta Ads (% Spend Cut)</label>
+          <input type="range" id="simCutMeta" min="0" max="80" value="50" step="5" oninput="updateSimSliders()" class="w-full accent-red-500">
+          <div class="flex justify-between text-[11px] text-slate-400 font-mono mt-1">
+            <span>Cut: <strong id="simCutMetaVal" class="text-red-400">50%</strong> ($49,000)</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Reallocate to LinkedIn ABM ($ Boost)</label>
+          <input type="range" id="simAddLinkedIn" min="0" max="100" value="60" step="10" oninput="updateSimSliders()" class="w-full accent-blue-500">
+          <div class="flex justify-between text-[11px] text-slate-400 font-mono mt-1">
+            <span>Share of Cut: <strong id="simAddLinkedInVal" class="text-blue-400">60%</strong> ($29,400)</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Reallocate to High-Intent Search / Referral</label>
+          <div class="text-xs text-slate-300 font-mono p-2 bg-slate-900 rounded border border-slate-700">
+            Remaining Cut: <strong class="text-emerald-400" id="simAddOtherVal">40% ($19,600)</strong>
+          </div>
+        </div>
+
+        <div class="p-3 rounded-xl bg-indigo-950/40 border border-indigo-500/40 text-xs">
+          <div class="text-slate-400 font-semibold">Simulated Net Revenue Delta:</div>
+          <div class="text-xl font-bold font-mono text-emerald-400 mt-1" id="simProjectedRevDelta">+$1,842,000</div>
+          <div class="text-[10px] text-slate-400 mt-0.5">While total raw leads decrease by -2,100, pipeline revenue expands by +11%!</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 12. GRANULAR CUSTOMER JOURNEY DATA EXPLORER & AUDIT TRAIL -->
+    <section class="glass-card rounded-2xl p-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+            <i class="fa-solid fa-list-ul text-blue-400"></i> Section 12: Granular Customer Journey Record Explorer
+          </h3>
+          <p class="text-xs text-slate-400 mt-0.5">Explore individual lead records, stage progression, lead scoring, and specific drop-off reasons</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400 font-mono" id="recordTableCount">Showing 50 of 12,000</span>
+          <button onclick="exportFilteredRecords()" class="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded text-xs text-slate-300 font-medium transition">
+            <i class="fa-solid fa-file-csv"></i> Export Current View
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto custom-scrollbar">
+        <table class="w-full text-left text-xs" id="granularLeadTable">
+          <thead class="bg-slate-900/90 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+            <tr>
+              <th class="py-2.5 px-3">Lead ID</th>
+              <th class="py-2.5 px-3">Company</th>
+              <th class="py-2.5 px-2">Channel</th>
+              <th class="py-2.5 px-2">Segment</th>
+              <th class="py-2.5 px-2">Geo</th>
+              <th class="py-2.5 px-2">Month</th>
+              <th class="py-2.5 px-2 text-center">Score</th>
+              <th class="py-2.5 px-2">Stage Reached</th>
+              <th class="py-2.5 px-2">Status</th>
+              <th class="py-2.5 px-3 text-right">Deal Value</th>
+              <th class="py-2.5 px-3">Drop-off Reason</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800/60 font-mono" id="granularTableBody">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Controls -->
+      <div class="flex items-center justify-between mt-4 text-xs text-slate-400">
+        <div>
+          Page <span id="currentPageNum" class="text-white font-bold">1</span> of <span id="totalPageNum" class="text-white font-bold">240</span>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="prevTablePage()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-slate-200">Previous</button>
+          <button onclick="nextTablePage()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 rounded border border-slate-700 text-slate-200">Next</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- EXECUTIVE CONCLUSION CALLOUT (BOARD-READY SUMMARY) -->
+    <section class="glass-card rounded-2xl p-6 border-t-4 border-t-emerald-500 bg-gradient-to-b from-slate-900/90 to-slate-950">
+      <div class="flex items-start space-x-4">
+        <div class="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center shrink-0 text-emerald-400 text-2xl">
+          <i class="fa-solid fa-flag-checkered"></i>
+        </div>
+        <div>
+          <div class="text-xs font-bold uppercase tracking-wider text-emerald-400">Board-Level Takeaway</div>
+          <h2 class="text-lg font-bold text-white mt-0.5">Concise AI Executive Conclusion: Why High Leads Did Not Drive Revenue</h2>
+          <div class="text-xs text-slate-300 mt-2 space-y-2 leading-relaxed max-w-5xl">
+            <p>
+              <strong>1. The Root Cause of Funnel Leakage:</strong> High lead volumes did not translate into proportional revenue growth because marketing shifted budget toward <strong>low-intent top-of-funnel acquisition (Meta Ads and broad display)</strong>, where lead qualification rates collapsed to <strong>9.9%</strong>. Over 90% of these leads were students, micro-SMBs, or accidental clicks with zero budget authority.
+            </p>
+            <p>
+              <strong>2. Sales Pipeline Congestion:</strong> Sales SDR capacity became choked qualifying low-quality leads, causing sales velocity to decelerate and delaying follow-up on high-value inbound enterprise prospects from Google Search and LinkedIn.
+            </p>
+            <p>
+              <strong>3. Average Deal Value Dilution:</strong> The customers who did convert from low-intent channels purchased the smallest SMB packages ($3.8k - $4.8k ACV), while high-intent enterprise channels (LinkedIn ABM and Referral) generated deals averaging <strong>$28k - $32k ACV</strong>.
+            </p>
+            <p>
+              <strong>4. Immediate Strategic Remedy:</strong> Immediately reallocate <strong>$50,000+ of marketing spend from Meta Ads to LinkedIn ABM and Google High-Intent Search</strong>, eliminate top-of-funnel "CPL" incentives, and institute strict ICP gatekeeping (domain & company size verification) before leads are routed to sales reps.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-4 text-center text-xs text-slate-500">
+    Marketing Funnel Analytics & AI Architecture Platform &bull; Built for Executive Leadership &bull; Real-time Telemetry Engine
+  </footer>
+
+  <!-- LOAD COMPILED DATA BUNDLE -->
+  <script src="marketing_funnel_data.js"></script>
+
+  <!-- DASHBOARD APPLICATION SCRIPT -->
+  <script>
+    // State management
+    let rawData = window.MARKETING_FUNNEL_DATA || null;
+    let filteredRecords = [];
+    let currentTablePage = 1;
+    const pageSize = 50;
+
+    // Chart instances
+    let chartChannelShare = null;
+    let chartScatterPlot = null;
+    let chartMonthlyTrend = null;
+    let chartDropOffReasons = null;
+    let chartStageDropOffBar = null;
+    let chartSegmentRev = null;
+    let chartGeoRev = null;
+
+    // Helper formatting functions
+    const formatCurrency = (val) => '$' + Math.round(val).toLocaleString();
+    const formatNumber = (val) => Math.round(val).toLocaleString();
+    const formatPercent = (val) => (val !== undefined && !isNaN(val)) ? (Number(val).toFixed(1) + '%') : '0.0%';
+
+    // Initialize application
+    window.addEventListener('DOMContentLoaded', () => {
+      if (!rawData) {
+        console.error("Marketing funnel data not loaded!");
+        return;
+      }
+      populateCampaignDropdown();
+      applyFilters();
+      updateSimSliders();
+    });
+
+    function populateCampaignDropdown() {
+      const select = document.getElementById('filterCampaign');
+      if (!select || !rawData.Campaigns) return;
+      rawData.Campaigns.forEach(c => {
+        const opt = document.createElement('option');
+        opt.value = c.Id;
+        opt.textContent = `${c.Id} - ${c.Name}`;
+        select.appendChild(opt);
+      });
+    }
+
+    function resetAllFilters() {
+      document.getElementById('filterMonth').value = 'ALL';
+      document.getElementById('filterChannel').value = 'ALL';
+      document.getElementById('filterCampaignType').value = 'ALL';
+      document.getElementById('filterCampaign').value = 'ALL';
+      document.getElementById('filterSegment').value = 'ALL';
+      document.getElementById('filterGeo').value = 'ALL';
+      document.getElementById('filterStage').value = 'ALL';
+      applyFilters();
+    }
+
+    function applyFilters() {
+      if (!rawData || !rawData.Rows) return;
+
+      const fMonth = document.getElementById('filterMonth').value;
+      const fChannel = document.getElementById('filterChannel').value;
+      const fCampType = document.getElementById('filterCampaignType').value;
+      const fCampaign = document.getElementById('filterCampaign').value;
+      const fSegment = document.getElementById('filterSegment').value;
+      const fGeo = document.getElementById('filterGeo').value;
+      const fStage = document.getElementById('filterStage').value;
+
+      // Filter rows
+      // Row format: [0:Lead_ID, 1:Company, 2:Campaign_ID, 3:Channel, 4:Geography, 5:Customer_Segment, 6:Month, 7:Lead_Score, 8:Stage_Reached, 9:Is_Lead, 10:Is_Qualified, 11:Is_Opportunity, 12:Is_Won, 13:Deal_Value, 14:Sales_Cycle_Days, 15:Drop_Off_Stage, 16:Drop_Off_Reason]
+      filteredRecords = rawData.Rows.filter(r => {
+        // Month filter
+        if (fMonth !== 'ALL') {
+          if (fMonth === 'Q1' && !['2026-01', '2026-02', '2026-03'].includes(r[6])) return false;
+          if (fMonth === 'Q2' && !['2026-04', '2026-05', '2026-06'].includes(r[6])) return false;
+          if (fMonth === 'Q3' && !['2026-07', '2026-08', '2026-09'].includes(r[6])) return false;
+          if (fMonth === 'Q4' && !['2026-10', '2026-11', '2026-12'].includes(r[6])) return false;
+          if (!['Q1', 'Q2', 'Q3', 'Q4'].includes(fMonth) && r[6] !== fMonth) return false;
+        }
+
+        // Channel filter
+        if (fChannel !== 'ALL' && r[3] !== fChannel) return false;
+
+        // Campaign ID filter
+        if (fCampaign !== 'ALL' && r[2] !== fCampaign) return false;
+
+        // Campaign Type filter
+        if (fCampType !== 'ALL') {
+          const campObj = rawData.Campaigns.find(c => c.Id === r[2]);
+          if (!campObj || campObj.Type !== fCampType) return false;
+        }
+
+        // Segment filter
+        if (fSegment !== 'ALL' && r[5] !== fSegment) return false;
+
+        // Geography filter
+        if (fGeo !== 'ALL' && r[4] !== fGeo) return false;
+
+        // Stage Reached filter
+        if (fStage !== 'ALL') {
+          if (fStage === 'Lead' && r[8] !== 'Lead') return false;
+          if (fStage === 'Qualified Lead' && r[8] !== 'Qualified Lead') return false;
+          if (fStage === 'Opportunity' && r[8] !== 'Opportunity') return false;
+          if (fStage === 'Customer (Won)' && r[8] !== 'Customer (Won)') return false;
+        }
+
+        return true;
+      });
+
+      // Update badge
+      document.getElementById('activeFilterCountBadge').textContent = `${formatNumber(filteredRecords.length)} of 12,000 Records Active`;
+
+      // Update Header Date Range
+      const headerDate = document.getElementById('headerDateRange');
+      if (fMonth === 'ALL') headerDate.textContent = 'Full Year 2026 (Jan - Dec)';
+      else if (fMonth === 'Q1') headerDate.textContent = 'Q1 2026 (Jan - Mar)';
+      else if (fMonth === 'Q2') headerDate.textContent = 'Q2 2026 (Apr - Jun)';
+      else if (fMonth === 'Q3') headerDate.textContent = 'Q3 2026 (Jul - Sep)';
+      else if (fMonth === 'Q4') headerDate.textContent = 'Q4 2026 (Oct - Dec)';
+      else headerDate.textContent = fMonth;
+
+      // Update all dashboard sections
+      updateKPIs(filteredRecords);
+      renderFunnelSection(filteredRecords);
+      renderChannelAnalysis(filteredRecords);
+      renderScatterPlot();
+      renderCustomerJourneyAndDropOff(filteredRecords);
+      renderTimeTrendCharts();
+      renderRevenueAnalysis(filteredRecords);
+      renderCampaignTable();
+      generateAIInsights(filteredRecords);
+      evaluateManagementAlerts(filteredRecords);
+      currentTablePage = 1;
+      renderGranularTable();
+    }
+
+    // 1. UPDATE EXECUTIVE KPIS
+    function updateKPIs(records) {
+      const totalLeads = records.length;
+      let totalQual = 0;
+      let totalOpp = 0;
+      let totalWon = 0;
+      let totalRev = 0;
+
+      records.forEach(r => {
+        if (r[10] === 1) totalQual++;
+        if (r[11] === 1) totalOpp++;
+        if (r[12] === 1) {
+          totalWon++;
+          totalRev += r[13];
+        }
+      });
+
+      // Calculate spend prorated
+      // Total spend base is $450,000
+      const spendRatio = totalLeads / 12000;
+      const totalSpend = Math.round(450000 * spendRatio);
+      const totalImp = Math.round(9690000 * spendRatio);
+      const totalClicks = Math.round(297000 * spendRatio);
+
+      const qualRate = totalLeads > 0 ? (totalQual / totalLeads) * 100 : 0;
+      const oppRate = totalQual > 0 ? (totalOpp / totalQual) * 100 : 0;
+      const winRate = totalOpp > 0 ? (totalWon / totalOpp) * 100 : 0;
+      const convRate = totalLeads > 0 ? (totalWon / totalLeads) * 100 : 0;
+      const avgRev = totalWon > 0 ? Math.round(totalRev / totalWon) : 0;
+      const cpl = totalLeads > 0 ? (totalSpend / totalLeads) : 0;
+      const cac = totalWon > 0 ? (totalSpend / totalWon) : 0;
+      const roi = totalSpend > 0 ? ((totalRev - totalSpend) / totalSpend) * 100 : 0;
+      const ctr = totalImp > 0 ? (totalClicks / totalImp) * 100 : 0;
+
+      document.getElementById('kpiImpressions').textContent = (totalImp / 1000000).toFixed(2) + 'M';
+      document.getElementById('kpiClicks').textContent = formatNumber(totalClicks);
+      document.getElementById('kpiCTR').textContent = ctr.toFixed(2) + '% CTR';
+      document.getElementById('kpiTotalLeads').textContent = formatNumber(totalLeads);
+      document.getElementById('kpiQualifiedLeads').textContent = formatNumber(totalQual);
+      document.getElementById('kpiQualRate').textContent = qualRate.toFixed(1) + '% Qual Rate';
+      document.getElementById('kpiOpportunities').textContent = formatNumber(totalOpp);
+      document.getElementById('kpiOppRate').textContent = oppRate.toFixed(1) + '% of MQL';
+      document.getElementById('kpiConvertedCustomers').textContent = formatNumber(totalWon);
+      document.getElementById('kpiWinRate').textContent = winRate.toFixed(1) + '% of Opps';
+      document.getElementById('kpiConversionRate').textContent = convRate.toFixed(2) + '%';
+      document.getElementById('kpiTotalRevenue').textContent = formatCurrency(totalRev);
+      document.getElementById('kpiAvgRevenueCustomer').textContent = formatCurrency(avgRev);
+      document.getElementById('kpiCostPerLead').textContent = '$' + cpl.toFixed(2);
+      document.getElementById('kpiCAC').textContent = '$' + formatNumber(cac);
+      document.getElementById('kpiMarketingROI').textContent = formatNumber(roi) + '%';
+      document.getElementById('kpiTotalSpend').textContent = formatCurrency(totalSpend);
+
+      // Unit Economics Card
+      document.getElementById('metricACV').textContent = formatCurrency(avgRev);
+      document.getElementById('metricRevPerLead').textContent = '$' + (totalLeads > 0 ? Math.round(totalRev / totalLeads) : 0).toLocaleString();
+      document.getElementById('metricRevPerQual').textContent = '$' + (totalQual > 0 ? Math.round(totalRev / totalQual) : 0).toLocaleString();
+      document.getElementById('metricRevPerOpp').textContent = '$' + (totalOpp > 0 ? Math.round(totalRev / totalOpp) : 0).toLocaleString();
+      document.getElementById('revAnalysisTotal').textContent = formatCurrency(totalRev);
+    }
+
+    // 2. RENDER MARKETING FUNNEL
+    function renderFunnelSection(records) {
+      const totalLeads = records.length;
+      let totalQual = 0;
+      let totalOpp = 0;
+      let totalWon = 0;
+      let totalRev = 0;
+
+      records.forEach(r => {
+        if (r[10] === 1) totalQual++;
+        if (r[11] === 1) totalOpp++;
+        if (r[12] === 1) {
+          totalWon++;
+          totalRev += r[13];
+        }
+      });
+
+      const spendRatio = totalLeads / 12000;
+      const totalImp = Math.round(9690000 * spendRatio);
+      const totalClicks = Math.round(297000 * spendRatio);
+
+      document.getElementById('funnelImp').textContent = (totalImp / 1000000).toFixed(2) + 'M';
+      document.getElementById('funnelClicks').textContent = formatNumber(totalClicks);
+      document.getElementById('funnelLeads').textContent = formatNumber(totalLeads);
+      document.getElementById('funnelQual').textContent = formatNumber(totalQual);
+      document.getElementById('funnelOpp').textContent = formatNumber(totalOpp);
+      document.getElementById('funnelWon').textContent = formatNumber(totalWon);
+      document.getElementById('funnelRev').textContent = formatCurrency(totalRev);
+
+      const ctr = totalImp > 0 ? (totalClicks / totalImp) * 100 : 0;
+      const clickToLead = totalClicks > 0 ? (totalLeads / totalClicks) * 100 : 0;
+      const leadToQual = totalLeads > 0 ? (totalQual / totalLeads) * 100 : 0;
+      const qualToOpp = totalQual > 0 ? (totalOpp / totalQual) * 100 : 0;
+      const oppToWon = totalOpp > 0 ? (totalWon / totalOpp) * 100 : 0;
+      const overallConv = totalLeads > 0 ? (totalWon / totalLeads) * 100 : 0;
+      const avgDeal = totalWon > 0 ? Math.round(totalRev / totalWon) : 0;
+      const revPerLead = totalLeads > 0 ? Math.round(totalRev / totalLeads) : 0;
+
+      document.getElementById('funnelImpCTR').textContent = ctr.toFixed(2) + '%';
+      document.getElementById('funnelClickToLead').textContent = clickToLead.toFixed(2) + '%';
+      document.getElementById('funnelLeadToQual').textContent = leadToQual.toFixed(1) + '%';
+      document.getElementById('funnelQualToOpp').textContent = qualToOpp.toFixed(1) + '%';
+      document.getElementById('funnelOppToWon').textContent = oppToWon.toFixed(1) + '%';
+      document.getElementById('funnelOverallConv').textContent = overallConv.toFixed(2) + '%';
+      document.getElementById('funnelAvgDeal').textContent = formatCurrency(avgDeal);
+      document.getElementById('funnelRevPerLead').textContent = formatCurrency(revPerLead);
+
+      // Calculate estimated lost pipeline
+      const disqualifiedLeads = totalLeads - totalQual;
+      const disqualifiedOpps = totalQual - totalOpp;
+      const lostOppRevenue = disqualifiedOpps * (avgDeal * 0.31);
+      const lostLeadRevenue = disqualifiedLeads * (avgDeal * 0.04);
+      const totalLostPipeline = Math.round(lostOppRevenue + lostLeadRevenue);
+      document.getElementById('estimatedLostPipeline').textContent = '$' + (totalLostPipeline / 1000000).toFixed(1) + 'M';
+    }
+
+    // 4. CHANNEL ANALYSIS (VOLUME SHARE VS REVENUE SHARE)
+    function renderChannelAnalysis(records) {
+      const channels = ["Google Ads", "Meta Ads", "LinkedIn", "Email", "Organic Search", "Referral"];
+      const leadCounts = {};
+      const revCounts = {};
+      const qualCounts = {};
+      const wonCounts = {};
+
+      channels.forEach(c => {
+        leadCounts[c] = 0;
+        revCounts[c] = 0;
+        qualCounts[c] = 0;
+        wonCounts[c] = 0;
+      });
+
+      let totalLeads = records.length;
+      let totalRev = 0;
+
+      records.forEach(r => {
+        const ch = r[3];
+        if (leadCounts[ch] !== undefined) {
+          leadCounts[ch]++;
+          if (r[10] === 1) qualCounts[ch]++;
+          if (r[12] === 1) {
+            wonCounts[ch]++;
+            revCounts[ch] += r[13];
+            totalRev += r[13];
+          }
+        }
+      });
+
+      const leadSharePct = channels.map(c => totalLeads > 0 ? ((leadCounts[c] / totalLeads) * 100).toFixed(1) : 0);
+      const revSharePct = channels.map(c => totalRev > 0 ? ((revCounts[c] / totalRev) * 100).toFixed(1) : 0);
+
+      const ctx = document.getElementById('channelShareChart');
+      if (chartChannelShare) chartChannelShare.destroy();
+
+      chartChannelShare = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: channels,
+          datasets: [
+            {
+              label: 'Lead Volume Share (%)',
+              data: leadSharePct,
+              backgroundColor: 'rgba(59, 130, 246, 0.75)',
+              borderColor: '#3b82f6',
+              borderWidth: 1,
+              borderRadius: 6
+            },
+            {
+              label: 'Revenue Contribution (%)',
+              data: revSharePct,
+              backgroundColor: 'rgba(16, 185, 129, 0.85)',
+              borderColor: '#10b981',
+              borderWidth: 1,
+              borderRadius: 6
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  return `${context.dataset.label}: ${context.raw}%`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#94a3b8', font: { size: 11 } },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            },
+            y: {
+              ticks: { color: '#94a3b8', callback: v => v + '%' },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            }
+          }
+        }
+      });
+
+      // Update Channel Metrics Mini Grid
+      const grid = document.getElementById('channelMetricsMiniGrid');
+      grid.innerHTML = '';
+      channels.forEach(ch => {
+        const lCount = leadCounts[ch] || 0;
+        const rVal = revCounts[ch] || 0;
+        const qRate = lCount > 0 ? ((qualCounts[ch] / lCount) * 100).toFixed(1) : '0';
+        const acv = wonCounts[ch] > 0 ? formatCurrency(Math.round(rVal / wonCounts[ch])) : '$0';
+
+        const isProblem = (ch === 'Meta Ads');
+        const isWinner = (ch === 'LinkedIn' || ch === 'Referral');
+
+        const card = document.createElement('div');
+        card.className = `p-2.5 rounded-lg border text-xs ${isProblem ? 'bg-red-950/20 border-red-500/30' : isWinner ? 'bg-emerald-950/20 border-emerald-500/30' : 'bg-slate-900/80 border-slate-800'}`;
+        card.innerHTML = `
+          <div class="flex items-center justify-between font-bold ${isProblem ? 'text-red-400' : isWinner ? 'text-emerald-400' : 'text-slate-300'}">
+            <span>${ch}</span>
+            <span>${isProblem ? '⚠️ Trap' : isWinner ? '★ Star' : ''}</span>
+          </div>
+          <div class="text-[11px] text-slate-400 mt-1">Leads: <strong class="text-white font-mono">${formatNumber(lCount)}</strong> (${totalLeads > 0 ? Math.round((lCount/totalLeads)*100) : 0}%)</div>
+          <div class="text-[11px] text-slate-400">Qual %: <strong class="${parseFloat(qRate) < 20 ? 'text-red-400' : 'text-slate-200'} font-mono">${qRate}%</strong></div>
+          <div class="text-[11px] text-slate-400">Rev: <strong class="${isWinner ? 'text-emerald-300' : 'text-white'} font-mono">${formatCurrency(rVal)}</strong></div>
+          <div class="text-[11px] text-slate-400">ACV: <strong class="text-slate-300 font-mono">${acv}</strong></div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // 5. LEAD QUALITY SCATTER PLOT
+    function renderScatterPlot() {
+      if (!rawData || !rawData.Campaigns) return;
+
+      const channelColors = {
+        'Google Ads': '#3b82f6',
+        'Meta Ads': '#ef4444',
+        'LinkedIn': '#8b5cf6',
+        'Email': '#06b6d4',
+        'Organic Search': '#10b981',
+        'Referral': '#f59e0b'
+      };
+
+      const datasets = [];
+      const grouped = {};
+
+      rawData.Campaigns.forEach(c => {
+        if (!grouped[c.Channel]) grouped[c.Channel] = [];
+        grouped[c.Channel].push({
+          x: c.Leads,
+          y: c.Revenue,
+          r: Math.max(5, Math.min(25, Math.round(c.Spend / 3000))),
+          campaignName: c.Name,
+          spend: c.Spend,
+          roi: c.ROI,
+          convRate: c.ConvRate,
+          channel: c.Channel
+        });
+      });
+
+      Object.keys(grouped).forEach(ch => {
+        datasets.push({
+          label: ch,
+          data: grouped[ch],
+          backgroundColor: channelColors[ch] || '#94a3b8',
+          borderColor: '#ffffff33',
+          borderWidth: 1.5,
+          hoverBorderColor: '#ffffff',
+          hoverBorderWidth: 2
+        });
+      });
+
+      const ctx = document.getElementById('scatterPlotChart');
+      if (chartScatterPlot) chartScatterPlot.destroy();
+
+      chartScatterPlot = new Chart(ctx, {
+        type: 'bubble',
+        data: { datasets: datasets },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans', size: 11 } }
+            },
+            tooltip: {
+              callbacks: {
+                title: function(items) {
+                  return items[0].raw.campaignName;
+                },
+                label: function(context) {
+                  const d = context.raw;
+                  return [
+                    `Channel: ${d.channel}`,
+                    `Lead Volume: ${formatNumber(d.x)}`,
+                    `Revenue: ${formatCurrency(d.y)}`,
+                    `Marketing Spend: ${formatCurrency(d.spend)}`,
+                    `Conv Rate: ${d.convRate}% | ROI: ${d.roi}%`
+                  ];
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              title: { display: true, text: 'Lead Volume (Count)', color: '#94a3b8', font: { size: 11 } },
+              ticks: { color: '#94a3b8' },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            },
+            y: {
+              title: { display: true, text: 'Realized Revenue ($)', color: '#94a3b8', font: { size: 11 } },
+              ticks: { color: '#94a3b8', callback: v => '$' + (v >= 1000000 ? (v/1000000).toFixed(1) + 'M' : (v/1000) + 'k') },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            }
+          }
+        }
+      });
+    }
+
+    // 6. CUSTOMER JOURNEY ATTRITION & DROP-OFF CHARTS
+    function renderCustomerJourneyAndDropOff(records) {
+      const dropReasonCounts = {};
+      const stageDropCounts = {
+        'Lead -> Qualified': 0,
+        'Qualified -> Opportunity': 0,
+        'Opportunity -> Customer': 0
+      };
+
+      records.forEach(r => {
+        const stage = r[15];
+        const reason = r[16];
+        if (stage && stage !== 'None' && stageDropCounts[stage] !== undefined) {
+          stageDropCounts[stage]++;
+        }
+        if (reason && reason !== 'None') {
+          dropReasonCounts[reason] = (dropReasonCounts[reason] || 0) + 1;
+        }
+      });
+
+      // Chart 1: Drop Off Reasons (Horizontal Bar)
+      const sortedReasons = Object.entries(dropReasonCounts)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 6);
+
+      const ctxReasons = document.getElementById('dropOffReasonsChart');
+      if (chartDropOffReasons) chartDropOffReasons.destroy();
+
+      chartDropOffReasons = new Chart(ctxReasons, {
+        type: 'bar',
+        data: {
+          labels: sortedReasons.map(r => r[0]),
+          datasets: [{
+            label: 'Prospects Dropped',
+            data: sortedReasons.map(r => r[1]),
+            backgroundColor: 'rgba(239, 68, 68, 0.75)',
+            borderColor: '#ef4444',
+            borderWidth: 1,
+            borderRadius: 4
+          }]
+        },
+        options: {
+          indexAxis: 'y',
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            title: { display: true, text: 'Top Prospect Loss Reasons Across Funnel', color: '#cbd5e1', font: { size: 11 } }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+            y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } }
+          }
+        }
+      });
+
+      // Chart 2: Drop Off by Funnel Stage (Donut / Bar)
+      const ctxStage = document.getElementById('stageDropOffBarChart');
+      if (chartStageDropOffBar) chartStageDropOffBar.destroy();
+
+      chartStageDropOffBar = new Chart(ctxStage, {
+        type: 'doughnut',
+        data: {
+          labels: ['Lead -> Qualified (MQL Drop)', 'Qualified -> Opp (SQL Drop)', 'Opp -> Customer (Deal Lost)'],
+          datasets: [{
+            data: [stageDropCounts['Lead -> Qualified'], stageDropCounts['Qualified -> Opportunity'], stageDropCounts['Opportunity -> Customer']],
+            backgroundColor: ['#ef4444', '#f59e0b', '#3b82f6'],
+            borderColor: '#0f172a',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 10 } } },
+            title: { display: true, text: 'Total Value Leakage Volume by Stage', color: '#cbd5e1', font: { size: 11 } }
+          },
+          cutout: '65%'
+        }
+      });
+    }
+
+    // 9. TIME TREND ANALYSIS CHART
+    function renderTimeTrendCharts() {
+      if (!rawData || !rawData.MonthlyTrends) return;
+
+      const labels = rawData.MonthlyTrends.map(m => m.Month.replace('2026-', ''));
+      const leads = rawData.MonthlyTrends.map(m => m.Leads);
+      const qualLeads = rawData.MonthlyTrends.map(m => m.QualifiedLeads);
+      const revenue = rawData.MonthlyTrends.map(m => m.Revenue / 1000); // in thousands
+      const spend = rawData.MonthlyTrends.map(m => m.MarketingSpend / 1000);
+
+      const ctx = document.getElementById('monthlyTrendChart');
+      if (chartMonthlyTrend) chartMonthlyTrend.destroy();
+
+      chartMonthlyTrend = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          datasets: [
+            {
+              label: 'Total Leads (Count)',
+              data: leads,
+              borderColor: '#3b82f6',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              yAxisID: 'y',
+              borderWidth: 2.5,
+              tension: 0.3,
+              pointRadius: 4
+            },
+            {
+              label: 'Qualified Leads (Count)',
+              data: qualLeads,
+              borderColor: '#f59e0b',
+              backgroundColor: 'transparent',
+              yAxisID: 'y',
+              borderWidth: 2,
+              borderDash: [5, 5],
+              tension: 0.3,
+              pointRadius: 3
+            },
+            {
+              label: 'Revenue ($ in Thousands)',
+              data: revenue,
+              borderColor: '#10b981',
+              backgroundColor: 'rgba(16, 185, 129, 0.08)',
+              yAxisID: 'y1',
+              borderWidth: 3,
+              tension: 0.3,
+              pointRadius: 4
+            },
+            {
+              label: 'Spend ($ in Thousands)',
+              data: spend,
+              borderColor: '#ef4444',
+              backgroundColor: 'transparent',
+              yAxisID: 'y1',
+              borderWidth: 1.5,
+              borderDash: [3, 3],
+              tension: 0.3,
+              pointRadius: 3
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { mode: 'index', intersect: false },
+          plugins: {
+            legend: { labels: { color: '#94a3b8', font: { size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  if (ctx.dataset.yAxisID === 'y1') return `${ctx.dataset.label}: $${ctx.raw.toLocaleString()}k`;
+                  return `${ctx.dataset.label}: ${ctx.raw.toLocaleString()}`;
+                }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+            y: {
+              type: 'linear',
+              display: true,
+              position: 'left',
+              title: { display: true, text: 'Lead Volume (Count)', color: '#3b82f6', font: { size: 11 } },
+              ticks: { color: '#94a3b8' },
+              grid: { color: 'rgba(255, 255, 255, 0.05)' }
+            },
+            y1: {
+              type: 'linear',
+              display: true,
+              position: 'right',
+              title: { display: true, text: 'Financials ($ Thousands)', color: '#10b981', font: { size: 11 } },
+              ticks: { color: '#94a3b8', callback: v => '$' + v + 'k' },
+              grid: { drawOnChartArea: false }
+            }
+          }
+        }
+      });
+    }
+
+    // 7. REVENUE ANALYSIS (SEGMENT & GEOGRAPHY)
+    function renderRevenueAnalysis(records) {
+      const segRev = { 'Enterprise': 0, 'Mid-Market': 0, 'SMB': 0 };
+      const geoRev = { 'North America': 0, 'EMEA': 0, 'APAC': 0, 'LATAM': 0 };
+
+      records.forEach(r => {
+        if (r[12] === 1) { // Is Won
+          const seg = r[5];
+          const geo = r[4];
+          const val = r[13];
+          if (segRev[seg] !== undefined) segRev[seg] += val;
+          if (geoRev[geo] !== undefined) geoRev[geo] += val;
+        }
+      });
+
+      // Segment Doughnut Chart
+      const ctxSeg = document.getElementById('segmentRevChart');
+      if (chartSegmentRev) chartSegmentRev.destroy();
+
+      chartSegmentRev = new Chart(ctxSeg, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(segRev),
+          datasets: [{
+            data: Object.values(segRev),
+            backgroundColor: ['#8b5cf6', '#3b82f6', '#06b6d4'],
+            borderColor: '#0f172a',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 } } },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) {
+                  return `${ctx.label}: ${formatCurrency(ctx.raw)}`;
+                }
+              }
+            }
+          },
+          cutout: '60%'
+        }
+      });
+
+      // Geo Bar Chart
+      const ctxGeo = document.getElementById('geoRevChart');
+      if (chartGeoRev) chartGeoRev.destroy();
+
+      chartGeoRev = new Chart(ctxGeo, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(geoRev),
+          datasets: [{
+            label: 'Revenue by Geography',
+            data: Object.values(geoRev),
+            backgroundColor: 'rgba(37, 99, 235, 0.8)',
+            borderColor: '#2563eb',
+            borderWidth: 1,
+            borderRadius: 6
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              callbacks: {
+                label: function(ctx) { return formatCurrency(ctx.raw); }
+              }
+            }
+          },
+          scales: {
+            x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+            y: { ticks: { color: '#94a3b8', callback: v => '$' + (v/1000000).toFixed(1) + 'M' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } }
+          }
+        }
+      });
+    }
+
+    // 3. CAMPAIGN PERFORMANCE TABLE
+    function renderCampaignTable() {
+      if (!rawData || !rawData.Campaigns) return;
+      const tbody = document.getElementById('campaignTableBody');
+      tbody.innerHTML = '';
+
+      rawData.Campaigns.forEach(c => {
+        const isNegativeROI = c.ROI < 0;
+        const tr = document.createElement('tr');
+        tr.className = `hover:bg-slate-800/50 transition border-b border-slate-800/40 ${isNegativeROI ? 'bg-red-950/10' : ''}`;
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 font-semibold ${isNegativeROI ? 'text-red-400' : 'text-slate-200'}">${c.Name}</td>
+          <td class="py-2.5 px-2 text-slate-400 font-sans">${c.Channel}</td>
+          <td class="py-2.5 px-2"><span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-sans">${c.Type}</span></td>
+          <td class="py-2.5 px-2 text-right text-slate-300 font-mono">${formatCurrency(c.Spend)}</td>
+          <td class="py-2.5 px-2 text-right font-mono font-bold text-white">${formatNumber(c.Leads)}</td>
+          <td class="py-2.5 px-2 text-right font-mono ${c.QualRate < 20 ? 'text-red-400 font-bold' : 'text-slate-300'}">${c.QualRate}%</td>
+          <td class="py-2.5 px-2 text-right font-mono text-slate-300">${c.OppRate}%</td>
+          <td class="py-2.5 px-2 text-right font-mono ${c.ConvRate < 1 ? 'text-red-400' : 'text-emerald-400'}">${c.ConvRate}%</td>
+          <td class="py-2.5 px-2 text-right font-mono font-bold text-white">${c.Won}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold ${isNegativeROI ? 'text-red-400' : 'text-emerald-300'}">${formatCurrency(c.Revenue)}</td>
+          <td class="py-2.5 px-2 text-right font-mono text-slate-400">$${c.CPL}</td>
+          <td class="py-2.5 px-2 text-right font-mono text-slate-400">$${c.CAC}</td>
+          <td class="py-2.5 px-3 text-right font-mono font-bold ${isNegativeROI ? 'text-red-400' : 'text-violet-400'}">${c.ROI}%</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function searchCampaignTable() {
+      const q = document.getElementById('campaignSearchInput').value.toLowerCase();
+      const rows = document.querySelectorAll('#campaignTableBody tr');
+      rows.forEach(r => {
+        const text = r.textContent.toLowerCase();
+        r.style.display = text.includes(q) ? '' : 'none';
+      });
+    }
+
+    // 10. AI INSIGHTS ENGINE
+    function generateAIInsights(records) {
+      const totalLeads = records.length;
+      let totalQual = 0;
+      let totalOpp = 0;
+      let totalWon = 0;
+      let totalRev = 0;
+
+      let metaLeads = 0, metaRev = 0, metaQual = 0;
+      let liLeads = 0, liRev = 0, liQual = 0;
+
+      records.forEach(r => {
+        if (r[10] === 1) totalQual++;
+        if (r[11] === 1) totalOpp++;
+        if (r[12] === 1) {
+          totalWon++;
+          totalRev += r[13];
+        }
+
+        if (r[3] === 'Meta Ads') {
+          metaLeads++;
+          if (r[10] === 1) metaQual++;
+          if (r[12] === 1) metaRev += r[13];
+        } else if (r[3] === 'LinkedIn') {
+          liLeads++;
+          if (r[10] === 1) liQual++;
+          if (r[12] === 1) liRev += r[13];
+        }
+      });
+
+      const qualRate = totalLeads > 0 ? ((totalQual / totalLeads) * 100).toFixed(1) : 0;
+      const oppRate = totalQual > 0 ? ((totalOpp / totalQual) * 100).toFixed(1) : 0;
+      const convRate = totalLeads > 0 ? ((totalWon / totalLeads) * 100).toFixed(2) : 0;
+
+      const metaQualRate = metaLeads > 0 ? ((metaQual / metaLeads) * 100).toFixed(1) : 0;
+      const liQualRate = liLeads > 0 ? ((liQual / liLeads) * 100).toFixed(1) : 0;
+      const metaLeadShare = totalLeads > 0 ? Math.round((metaLeads / totalLeads) * 100) : 0;
+      const liRevShare = totalRev > 0 ? Math.round((liRev / totalRev) * 100) : 0;
+
+      // 1. What is Happening
+      document.getElementById('aiWhatIsHappening').innerHTML = `
+        <p>• Lead volume reached <strong>${formatNumber(totalLeads)} leads</strong>, but total conversion is hovering at only <strong>${convRate}%</strong>.</p>
+        <p>• While Meta Ads represents <strong>${metaLeadShare}% of total leads</strong>, it generated only <strong>${formatCurrency(metaRev)} in revenue</strong>.</p>
+        <p>• Conversely, LinkedIn delivered only <strong>${formatNumber(liLeads)} leads</strong> but produced <strong>${formatCurrency(liRev)} (${liRevShare}% of total revenue)</strong>.</p>
+      `;
+
+      // 2. Where Value Is Being Lost
+      document.getElementById('aiWhereValueLost').innerHTML = `
+        <p>• <strong class="text-red-400">Leakage Point #1:</strong> Lead &rarr; Qualified Lead drop of <strong>${(100 - qualRate).toFixed(1)}%</strong>. Meta lead qualification is disastrous at only <strong>${metaQualRate}%</strong>.</p>
+        <p>• <strong class="text-amber-400">Leakage Point #2:</strong> MQL &rarr; Sales Opportunity drop of <strong>${(100 - oppRate).toFixed(1)}%</strong>, where SDRs reject 6 out of 10 qualified leads due to absent budget authority.</p>
+        <p>• Value lost in disqualified pipeline exceeds <strong>$41.2M</strong>.</p>
+      `;
+
+      // 3. Why It May Be Happening
+      document.getElementById('aiWhyHappening').innerHTML = `
+        <p>• <strong>Incentive Misalignment:</strong> Marketing KPIs rewarded raw CPL minimization instead of Pipeline Revenue, causing teams to scale cheap social forms ($14.50 CPL).</p>
+        <p>• <strong>Low Buying Authority:</strong> Meta campaigns offer broad e-books and video assets that attract students and micro-SMBs rather than Enterprise economic buyers.</p>
+        <p>• <strong>SDR Bandwidth Starvation:</strong> SDRs are bogged down wading through 4,800+ junk records, delaying follow-ups with high-intent inbound prospects.</p>
+      `;
+
+      // 4. What Management Should Investigate
+      document.getElementById('aiWhatToInvestigate').innerHTML = `
+        <p>• <strong>Audit Attribution Model:</strong> Replace last-click/first-click lead count with Multi-Touch Pipeline Revenue Attribution.</p>
+        <p>• <strong>SDR SLA & Gating:</strong> Enforce mandatory business email verification and company employee count gating (&ge;50 employees) before lead creation.</p>
+        <p>• <strong>Budget Reallocation:</strong> Immediately migrate $50,000 from Meta to LinkedIn ABM and Google Search High Intent.</p>
+      `;
+    }
+
+    // 11. MANAGEMENT ALERTS
+    function evaluateManagementAlerts(records) {
+      const container = document.getElementById('managementAlertsContainer');
+      container.innerHTML = '';
+
+      const alerts = [
+        {
+          type: 'danger',
+          title: 'High Volume / Negative ROI Trap',
+          channel: 'Meta Ads (All Campaigns)',
+          desc: 'Meta campaigns spent $98,000 to generate 4,878 leads but yielded only $10,181 revenue (-89.6% net loss).',
+          metric: 'ROI: -89.6% | Conv: 0.06%'
+        },
+        {
+          type: 'warning',
+          title: 'Severe Lead Qualification Deterioration',
+          channel: 'Paid Social & Display',
+          desc: 'Lead qualification rate plunged to 10.7% on Lookalike and 9.1% on E-Book Lead Gen campaigns.',
+          metric: 'Disqualification Rate: 90.9%'
+        },
+        {
+          type: 'success',
+          title: 'High-Efficiency Revenue Engine',
+          channel: 'LinkedIn ABM & Referral',
+          desc: 'Referral and LinkedIn deliver 68% of all enterprise deals with average deal sizes exceeding $28,500.',
+          metric: 'Blended ROI: +4,200%'
+        }
+      ];
+
+      alerts.forEach(a => {
+        const isDanger = a.type === 'danger';
+        const isWarn = a.type === 'warning';
+        const div = document.createElement('div');
+        div.className = `p-3 rounded-xl border flex items-start space-x-3 ${isDanger ? 'bg-red-950/20 border-red-500/30' : isWarn ? 'bg-amber-950/20 border-amber-500/30' : 'bg-emerald-950/20 border-emerald-500/30'}`;
+        div.innerHTML = `
+          <div class="mt-0.5 ${isDanger ? 'text-red-400' : isWarn ? 'text-amber-400' : 'text-emerald-400'}">
+            <i class="fa-solid ${isDanger ? 'fa-triangle-exclamation' : isWarn ? 'fa-circle-exclamation' : 'fa-circle-check'} text-base"></i>
+          </div>
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold text-white">${a.title}</span>
+              <span class="text-[10px] font-mono font-semibold ${isDanger ? 'text-red-300' : isWarn ? 'text-amber-300' : 'text-emerald-300'}">${a.metric}</span>
+            </div>
+            <div class="text-[11px] text-slate-300 mt-1">${a.desc}</div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    // 12. GRANULAR TABLE & PAGINATION
+    function renderGranularTable() {
+      const tbody = document.getElementById('granularTableBody');
+      tbody.innerHTML = '';
+
+      const totalPages = Math.ceil(filteredRecords.length / pageSize) || 1;
+      document.getElementById('totalPageNum').textContent = totalPages;
+      document.getElementById('currentPageNum').textContent = currentTablePage;
+
+      const start = (currentTablePage - 1) * pageSize;
+      const end = Math.min(start + pageSize, filteredRecords.length);
+      document.getElementById('recordTableCount').textContent = `Showing ${filteredRecords.length > 0 ? start + 1 : 0}-${end} of ${formatNumber(filteredRecords.length)}`;
+
+      const pageRows = filteredRecords.slice(start, end);
+      pageRows.forEach(r => {
+        // [0:Lead_ID, 1:Company, 2:Campaign_ID, 3:Channel, 4:Geography, 5:Customer_Segment, 6:Month, 7:Lead_Score, 8:Stage_Reached, 9:Is_Lead, 10:Is_Qualified, 11:Is_Opportunity, 12:Is_Won, 13:Deal_Value, 14:Sales_Cycle_Days, 15:Drop_Off_Stage, 16:Drop_Off_Reason]
+        const isWon = r[12] === 1;
+        const tr = document.createElement('tr');
+        tr.className = `hover:bg-slate-800/40 transition border-b border-slate-800/30 ${isWon ? 'bg-emerald-950/10' : ''}`;
+        tr.innerHTML = `
+          <td class="py-2 px-3 font-mono text-blue-400">${r[0]}</td>
+          <td class="py-2 px-3 font-sans font-semibold text-slate-200">${r[1]}</td>
+          <td class="py-2 px-2 font-sans text-slate-300">${r[3]}</td>
+          <td class="py-2 px-2 font-sans text-slate-400">${r[5]}</td>
+          <td class="py-2 px-2 font-sans text-slate-400">${r[4]}</td>
+          <td class="py-2 px-2 font-mono text-slate-400">${r[6]}</td>
+          <td class="py-2 px-2 text-center font-mono ${r[7] < 40 ? 'text-red-400' : r[7] > 70 ? 'text-emerald-400' : 'text-slate-300'}">${r[7]}</td>
+          <td class="py-2 px-2 font-sans"><span class="px-2 py-0.5 rounded text-[10px] ${isWon ? 'bg-emerald-500/20 text-emerald-300 font-bold' : r[11] === 1 ? 'bg-amber-500/20 text-amber-300' : r[10] === 1 ? 'bg-blue-500/20 text-blue-300' : 'bg-slate-800 text-slate-400'}">${r[8]}</span></td>
+          <td class="py-2 px-2 font-sans text-[11px]">${isWon ? '<span class="text-emerald-400 font-bold">Closed Won</span>' : '<span class="text-slate-500">Dropped</span>'}</td>
+          <td class="py-2 px-3 text-right font-mono font-bold ${isWon ? 'text-emerald-300' : 'text-slate-500'}">${isWon ? formatCurrency(r[13]) : '$0'}</td>
+          <td class="py-2 px-3 font-sans text-slate-400 text-[11px] truncate max-w-xs" title="${r[16]}">${r[16] !== 'None' ? r[16] : '-'}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function prevTablePage() {
+      if (currentTablePage > 1) {
+        currentTablePage--;
+        renderGranularTable();
+      }
+    }
+
+    function nextTablePage() {
+      const totalPages = Math.ceil(filteredRecords.length / pageSize) || 1;
+      if (currentTablePage < totalPages) {
+        currentTablePage++;
+        renderGranularTable();
+      }
+    }
+
+    // SIMULATOR
+    function updateSimSliders() {
+      const cutPct = parseInt(document.getElementById('simCutMeta').value);
+      const liPct = parseInt(document.getElementById('simAddLinkedIn').value);
+      const otherPct = 100 - liPct;
+
+      const metaBaseSpend = 98000;
+      const cutDollars = Math.round(metaBaseSpend * (cutPct / 100));
+      const liDollars = Math.round(cutDollars * (liPct / 100));
+      const otherDollars = cutDollars - liDollars;
+
+      document.getElementById('simCutMetaVal').textContent = `${cutPct}% ($${cutDollars.toLocaleString()})`;
+      document.getElementById('simAddLinkedInVal').textContent = `${liPct}% ($${liDollars.toLocaleString()})`;
+      document.getElementById('simAddOtherVal').textContent = `${otherPct}% ($${otherDollars.toLocaleString()})`;
+
+      // Projected Revenue
+      // LinkedIn historical ROI: ~4000% (40x)
+      // Google / Referral historical ROI: ~2500% (25x)
+      // Meta lost ROI: 0.1x
+      const newRevLinkedIn = liDollars * 36;
+      const newRevOther = otherDollars * 25;
+      const lostMetaRev = cutDollars * 0.10;
+      const netGain = Math.round(newRevLinkedIn + newRevOther - lostMetaRev);
+
+      document.getElementById('simProjectedRevDelta').textContent = `+$${(netGain / 1000000).toFixed(2)}M`;
+    }
+
+    function runSimulation() {
+      updateSimSliders();
+      alert("Simulation Recalculated: Reallocating spend from Meta Ads to LinkedIn Enterprise ABM projects an incremental +$1.8M to +$2.2M in annual pipeline revenue with a 65% reduction in disqualified SDR contacts!");
+    }
+
+    // EXPORT FUNCTIONS
+    function exportCSV() {
+      if (!rawData || !rawData.Rows) return;
+      let csvContent = "data:text/csv;charset=utf-8," + rawData.Columns.join(",") + "\n";
+      rawData.Rows.slice(0, 2000).forEach(r => {
+        csvContent += r.map(v => typeof v === 'string' ? `"${v.replace(/"/g, '""')}"` : v).join(",") + "\n";
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "marketing_funnel_records_sample.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function exportFilteredRecords() {
+      if (!filteredRecords || filteredRecords.length === 0) return;
+      let csvContent = "data:text/csv;charset=utf-8," + rawData.Columns.join(",") + "\n";
+      filteredRecords.slice(0, 1500).forEach(r => {
+        csvContent += r.map(v => typeof v === 'string' ? `"${v.replace(/"/g, '""')}"` : v).join(",") + "\n";
+      });
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", "filtered_funnel_view.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  </script>
+</body>
+</html>
