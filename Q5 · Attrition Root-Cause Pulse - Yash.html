@@ -1,0 +1,31 @@
+<!doctype html><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Attrition Root-Cause Pulse</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--c:#141b33;--t:#e8ecff;--m:#8d97c4;--a:#00e5c3;--b:#ff4d8d}
+*{box-sizing:border-box}body{margin:0;padding:calc(12px + env(safe-area-inset-top,0px)) 14px 14px;background:var(--bg);color:var(--t);font:14px system-ui,sans-serif}
+h1{font-size:20px;margin:0}small{color:var(--m)}
+.g{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin:12px 0}
+.k,.p{background:var(--c);border:1px solid #232c52;border-radius:14px;padding:14px}
+.k b{display:block;font-size:26px;color:var(--a)}
+.w{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(290px,1fr))}
+.r{display:flex;align-items:center;gap:8px;margin:7px 0;font-size:12px}.r i{flex:0 0 105px;font-style:normal;color:var(--m)}.r u{height:8px;border-radius:4px;background:linear-gradient(90deg,var(--a),var(--b));transition:width .6s}
+.o{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:12px}td,th{padding:6px;text-align:left;border-bottom:1px solid #232c52;white-space:nowrap}
+</style>
+<h1>Attrition Root-Cause Pulse <small>● live · 60 synthetic employees</small></h1>
+<div class=g id=k></div>
+<div class=w><div class=p><b>What’s driving risk</b><div id=d></div><svg id=s viewBox="0 0 300 70" width=100%></svg><small>Average risk, last 40 ticks</small></div>
+<div class="p o"><b>Highest-risk employees</b><table id=t></table></div></div>
+<script>
+const R=(a,b)=>a+Math.random()*(b-a),c=(v,a,b)=>Math.max(a,Math.min(b,v)),F=['Workload','Overtime','Pay gap','Absenteeism','Low engagement','Low training','Perf pressure'],W=[.2,.18,.18,.1,.16,.1,.08],A=['Rebalance headcount','Cap overtime','Pay review','Wellbeing check-in','Stay interview','Training plan','Reset targets'],D=['Sales','Ops','Tech','HR','Finance'];
+const N=i=>({id:'E'+(100+i),d:D[i%5],w:R(40,60),o:R(0,20),p:R(.8,1.2),a:R(0,10),g:R(30,95),t:R(0,40),f:R(2,5)});
+let E=[...Array(60)].map((_,i)=>N(i)),x=0,H=[];
+const S=e=>[(e.w-40)/20,e.o/20,(1.2-e.p)/.4,e.a/10,(95-e.g)/65,(40-e.t)/40,(e.f-2)/3].map(v=>c(v,0,1)),K=e=>S(e).reduce((s,v,i)=>s+v*W[i],0)*100;
+function tick(){for(let j=0;j<8;j++){const e=E[Math.random()*60|0];e.w=c(e.w+R(-2,2.5),40,60);e.o=c(e.o+R(-2,2.5),0,20);e.a=c(e.a+R(-1,1.2),0,10);e.g=c(e.g+R(-4,3.5),30,95);e.t=c(e.t+R(-2,2),0,40);e.f=c(e.f+R(-.2,.2),2,5);e.p=c(e.p+R(-.02,.02),.8,1.2)}
+E.forEach((e,i)=>{if(K(e)>66&&Math.random()<.3){x++;E[i]=N(i)}});
+const r=E.map(K),av=r.reduce((a,b)=>a+b)/60;H.push(av);H=H.slice(-40);
+const sm=F.map((_,i)=>E.reduce((s,e)=>s+S(e)[i]*W[i],0)/60),mx=Math.max(...sm),sum=sm.reduce((a,b)=>a+b);
+k.innerHTML=[['Exits (session)',x],['High-risk (>55)',r.filter(v=>v>55).length],['Avg engagement',(E.reduce((s,e)=>s+e.g,0)/60).toFixed(0)],['Replacement cost','₹'+(x*4.5).toFixed(1)+'L']].map(([a,b])=>`<div class=k><small>${a}</small><b>${b}</b></div>`).join('');
+d.innerHTML=F.map((f,i)=>`<div class=r><i>${f}</i><u style="width:${sm[i]/mx*60}%"></u>${(sm[i]/sum*100).toFixed(0)}%</div>`).join('');
+const lo=Math.min(...H),hi=Math.max(...H)+.1;s.innerHTML=`<polyline fill=none stroke=#00e5c3 stroke-width=2 points="${H.map((v,i)=>(i*300/39)+','+(65-(v-lo)/(hi-lo)*60)).join(' ')}"/>`;
+t.innerHTML='<tr><th>ID<th>Dept<th>Risk<th>Top cause<th>Action</tr>'+E.map(e=>[K(e),e]).sort((a,b)=>b[0]-a[0]).slice(0,7).map(([v,e])=>{const m=S(e).map((q,i)=>q*W[i]),j=m.indexOf(Math.max(...m));return`<tr><td>${e.id}<td>${e.d}<td style=color:#ff4d8d>${v.toFixed(0)}<td>${F[j]}<td>${A[j]}</tr>`}).join('')}
+tick();setInterval(tick,1500)
+</script>
