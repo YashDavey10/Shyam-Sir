@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Funnel Intelligence | AI Customer Journey & Leakage Diagnostics</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f2937;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-rose: #f43f5e;
+      --accent-amber: #f59e0b;
+      --accent-indigo: #6366f1;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body { background-color: var(--bg); color: var(--text-main); line-height: 1.5; padding: 24px; }
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid var(--card-border); }
+    .header h1 { font-size: 1.6rem; font-weight: 700; display: flex; align-items: center; gap: 10px; color: #fff; }
+    .header .subtitle { font-size: 0.9rem; color: var(--text-muted); margin-top: 4px; }
+    .badge-live { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; background: rgba(16, 185, 129, 0.15); border: 1px solid var(--accent-emerald); border-radius: 9999px; color: var(--accent-emerald); font-size: 0.8rem; font-weight: 600; }
+    .btn-action { background: var(--accent-indigo); color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+    .btn-action:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    /* KPI Grid */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .kpi-card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 10px; padding: 18px; position: relative; overflow: hidden; }
+    .kpi-card::before { content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--card-border); }
+    .kpi-card.spend::before { background: var(--accent-indigo); }
+    .kpi-card.leads::before { background: var(--accent-amber); }
+    .kpi-card.sql::before { background: var(--accent-cyan); }
+    .kpi-card.revenue::before { background: var(--accent-emerald); }
+    .kpi-card.leakage::before { background: var(--accent-rose); }
+    .kpi-title { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 600; margin-bottom: 8px; }
+    .kpi-value { font-size: 1.6rem; font-weight: 800; color: #fff; }
+    .kpi-sub { font-size: 0.8rem; color: var(--text-muted); margin-top: 4px; }
+
+    /* Section Cards */
+    .card { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 24px; margin-bottom: 24px; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .card-title { font-size: 1.15rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 8px; }
+
+    /* AI Executive Diagnosis Panel */
+    .ai-banner { background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(244, 63, 94, 0.08)); border: 1px solid rgba(99, 102, 241, 0.35); border-radius: 10px; padding: 20px; margin-bottom: 20px; }
+    .ai-headline { font-size: 1.15rem; font-weight: 700; color: #fbbf24; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; }
+    .ai-explanation { color: #d1d5db; font-size: 0.95rem; line-height: 1.6; margin-bottom: 16px; }
+
+    .action-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+    .action-step { background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 8px; padding: 14px; }
+    .action-badge { font-size: 0.75rem; font-weight: 700; color: var(--accent-cyan); text-transform: uppercase; margin-bottom: 4px; }
+    .action-step h4 { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 6px; }
+    .action-step p { font-size: 0.82rem; color: var(--text-muted); }
+    .action-impact { margin-top: 8px; font-size: 0.78rem; color: var(--accent-emerald); font-weight: 600; }
+
+    /* Funnel Waterfall */
+    .funnel-stage-row { display: flex; align-items: center; gap: 16px; padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .funnel-stage-meta { width: 220px; }
+    .funnel-stage-meta .name { font-weight: 700; font-size: 0.95rem; color: #fff; }
+    .funnel-stage-meta .count { font-size: 0.85rem; color: var(--text-muted); }
+    .funnel-bar-container { flex: 1; background: rgba(255,255,255,0.05); height: 28px; border-radius: 6px; position: relative; overflow: hidden; display: flex; align-items: center; }
+    .funnel-bar-fill { height: 100%; border-radius: 6px; transition: width 0.8s ease; display: flex; align-items: center; padding-left: 10px; font-weight: 700; font-size: 0.75rem; color: #fff; }
+    .funnel-dropoff-pill { width: 140px; text-align: right; }
+    .drop-rate { font-weight: 700; font-size: 0.85rem; color: var(--accent-rose); }
+    .vdi-loss { font-size: 0.78rem; color: #fca5a5; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    th { text-align: left; padding: 12px 10px; color: var(--text-muted); font-weight: 600; border-bottom: 1px solid var(--card-border); }
+    td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    tr:hover { background: rgba(255,255,255,0.02); }
+    .badge-status { padding: 3px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; }
+    .badge-toxic { background: rgba(244, 63, 94, 0.2); color: var(--accent-rose); border: 1px solid var(--accent-rose); }
+    .badge-highyield { background: rgba(16, 185, 129, 0.2); color: var(--accent-emerald); border: 1px solid var(--accent-emerald); }
+    .badge-mod { background: rgba(156, 163, 175, 0.2); color: var(--text-muted); }
+
+    /* Simulator */
+    .sim-box { background: rgba(0,0,0,0.25); border: 1px solid var(--card-border); border-radius: 10px; padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: center; }
+    .slider-container input[type="range"] { width: 100%; accent-color: var(--accent-emerald); height: 8px; border-radius: 4px; margin-top: 10px; }
+    .sim-results { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .sim-res-item { background: var(--card-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--card-border); }
+    .sim-res-val { font-size: 1.25rem; font-weight: 800; color: var(--accent-emerald); }
+
+    /* Journey Inspector */
+    .journey-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: rgba(255,255,255,0.08); border-radius: 4px; font-size: 0.75rem; margin-right: 4px; }
+
+    @media (max-width: 900px) {
+      .sim-box { grid-template-columns: 1fr; }
+      .funnel-stage-row { flex-direction: column; align-items: flex-start; }
+      .funnel-stage-meta, .funnel-bar-container, .funnel-dropoff-pill { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <div>
+      <h1><span>⚡</span> Funnel Intelligence AI</h1>
+      <div class="subtitle">Full-Funnel Customer Journey Attribution & Value Leakage Diagnostics</div>
+    </div>
+    <div style="display:flex; align-items:center; gap: 12px;">
+      <span class="badge-live">● System Active</span>
+      <button class="btn-action" onclick="fetchDiagnosis()">Re-Analyze AI</button>
+    </div>
+  </div>
+
+  <!-- KPI Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card spend">
+      <div class="kpi-title">Total Ad Spend</div>
+      <div class="kpi-value" id="kpi-spend">$0</div>
+      <div class="kpi-sub">5 Campaigns Analyzed</div>
+    </div>
+    <div class="kpi-card leads">
+      <div class="kpi-title">Total Leads (MQL)</div>
+      <div class="kpi-value" id="kpi-leads">0</div>
+      <div class="kpi-sub" id="kpi-cpl">CPL: $0.00</div>
+    </div>
+    <div class="kpi-card sql">
+      <div class="kpi-title">MQL ➔ SQL Rate</div>
+      <div class="kpi-value" id="kpi-sql-rate">0%</div>
+      <div class="kpi-sub" id="kpi-sqls">0 Qualified Leads</div>
+    </div>
+    <div class="kpi-card revenue">
+      <div class="kpi-title">Closed-Won Revenue</div>
+      <div class="kpi-value" id="kpi-revenue">$0</div>
+      <div class="kpi-sub" id="kpi-roas">ROAS: 0.0x</div>
+    </div>
+    <div class="kpi-card leakage">
+      <div class="kpi-title">Customer Acq. Cost (CAC)</div>
+      <div class="kpi-value" id="kpi-cac">$0</div>
+      <div class="kpi-sub" id="kpi-lre">LRE: $0 / 1k Leads</div>
+    </div>
+  </div>
+
+  <!-- AI Executive Diagnosis -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span>🧠</span> AI Root-Cause Diagnostic Report</div>
+      <span style="font-size:0.85rem; color:var(--text-muted);">Executive Reasoning Layer</span>
+    </div>
+
+    <div class="ai-banner">
+      <div class="ai-headline" id="ai-headline">Analyzing customer journeys...</div>
+      <div class="ai-explanation" id="ai-explanation">Please wait while the AI diagnostic engine runs attribution and leakage synthesis...</div>
+      
+      <div class="action-steps" id="ai-action-steps">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Visual Funnel Waterfall & Value Leakage -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span>📉</span> Customer Journey Funnel & Value Dropoff Index (VDI)</div>
+      <span style="font-size:0.85rem; color:var(--text-muted);">Pipeline Dollars Destroyed Per Stage Transition</span>
+    </div>
+    <div id="funnel-container">
+      <!-- Injected via JS -->
+    </div>
+  </div>
+
+  <!-- Campaign Performance & Attribution Matrix -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span>🎯</span> Campaign Performance & Attribution Disconnect Matrix</div>
+      <span style="font-size:0.85rem; color:var(--text-muted);">Detecting 'Toxic Lead Volume' vs. 'High-Yield Pipeline'</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table id="campaign-table">
+        <thead>
+          <tr>
+            <th>Campaign Name</th>
+            <th>Spend ($)</th>
+            <th>Leads (MQL)</th>
+            <th>Lead Share</th>
+            <th>Linear Revenue</th>
+            <th>Linear ROAS</th>
+            <th>Disconnect Ratio</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="campaign-tbody">
+          <!-- Injected via JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Lead Quality & ICP Disconnect Breakdown -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span>🔍</span> Lead Quality & ICP Fit Analysis</div>
+      <span style="font-size:0.85rem; color:var(--text-muted);">Explaining Why Top-of-Funnel Fails to Qualify</span>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+      <div style="background:rgba(0,0,0,0.2); border:1px solid var(--card-border); border-radius:8px; padding:16px;">
+        <h4 style="color:#fff; margin-bottom:10px;">Email Domain Quality</h4>
+        <div id="email-quality-body" style="font-size:0.88rem;">Loading...</div>
+      </div>
+      <div style="background:rgba(0,0,0,0.2); border:1px solid var(--card-border); border-radius:8px; padding:16px;">
+        <h4 style="color:#fff; margin-bottom:10px;">ICP Fit Score Tiers</h4>
+        <div id="icp-tiers-body" style="font-size:0.88rem;">Loading...</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- "What-If" Budget Reallocation Simulator -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-title"><span>🎛️</span> "What-If" Capital Reallocation Simulator</div>
+      <span style="font-size:0.85rem; color:var(--text-muted);">Simulate Shifting Budget from Toxic Channels into High-Yield Engines</span>
+    </div>
+    <div class="sim-box">
+      <div class="slider-container">
+        <label style="font-weight:600; color:#fff; display:flex; justify-content:space-between;">
+          <span>Shift Spend from Toxic Campaigns:</span>
+          <span id="slider-val" style="color:var(--accent-emerald); font-weight:700;">50%</span>
+        </label>
+        <input type="range" id="shift-slider" min="0" max="100" value="50" oninput="updateSimulation(this.value)">
+        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:8px;">
+          Cuts low-intent lead gen spend and reallocates capital into high-intent search and enterprise ABM.
+        </p>
+      </div>
+
+      <div class="sim-results">
+        <div class="sim-res-item">
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">REALLOCATED CAPITAL</div>
+          <div class="sim-res-val" id="sim-capital">$0</div>
+        </div>
+        <div class="sim-res-item">
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">NEW PROJECTED REVENUE</div>
+          <div class="sim-res-val" id="sim-new-rev">$0</div>
+        </div>
+        <div class="sim-res-item">
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">NET REVENUE LIFT</div>
+          <div class="sim-res-val" id="sim-lift">+$0</div>
+        </div>
+        <div class="sim-res-item">
+          <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600;">NEW BLENDED ROAS</div>
+          <div class="sim-res-val" id="sim-roas">0.0x</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    async function loadData() {
+      try {
+        const [sumRes, diagRes, attrRes, qualRes] = await Promise.all([
+          fetch("/api/funnel/summary").then(r => r.json()),
+          fetch("/api/ai/diagnose").then(r => r.json()),
+          fetch("/api/attribution").then(r => r.json()),
+          fetch("/api/lead-quality").then(r => r.json()),
+        ]);
+
+        renderKPIs(sumRes.kpis);
+        renderFunnel(sumRes.stage_metrics);
+        renderDiagnosis(diagRes.diagnostics);
+        renderCampaigns(attrRes.campaigns);
+        renderQuality(qualRes);
+        updateSimulation(50);
+      } catch (err) {
+        console.error("Failed to load dashboard data", err);
+      }
+    }
+
+    function renderKPIs(kpis) {
+      document.getElementById("kpi-spend").textContent = "$" + Math.round(kpis.total_marketing_spend).toLocaleString();
+      document.getElementById("kpi-leads").textContent = kpis.total_leads_mql.toLocaleString();
+      document.getElementById("kpi-cpl").textContent = `CPL: $${kpis.cost_per_lead_cpl.toFixed(2)}`;
+      document.getElementById("kpi-sql-rate").textContent = `${kpis.mql_to_sql_rate_pct.toFixed(1)}%`;
+      document.getElementById("kpi-sqls").textContent = `${kpis.total_sales_qualified_sql.toLocaleString()} SQLs`;
+      document.getElementById("kpi-revenue").textContent = "$" + Math.round(kpis.total_revenue).toLocaleString();
+      document.getElementById("kpi-roas").textContent = `Blended ROAS: ${kpis.overall_roas.toFixed(2)}x`;
+      document.getElementById("kpi-cac").textContent = "$" + Math.round(kpis.customer_acquisition_cost_cac).toLocaleString();
+      document.getElementById("kpi-lre").textContent = `LRE: $${Math.round(kpis.lead_to_revenue_efficiency_per_1k).toLocaleString()} / 1k MQLs`;
+    }
+
+    function renderFunnel(metrics) {
+      const container = document.getElementById("funnel-container");
+      container.innerHTML = "";
+      const maxCount = metrics[0].count || 1;
+
+      metrics.forEach((m, idx) => {
+        const pctWidth = Math.max(8, (m.count / maxCount) * 100);
+        const colors = ["#6366f1", "#f59e0b", "#06b6d4", "#8b5cf6", "#10b981"];
+        const color = colors[idx % colors.length];
+
+        const row = document.createElement("div");
+        row.className = "funnel-stage-row";
+        row.innerHTML = `
+          <div class="funnel-stage-meta">
+            <div class="name">${m.stage_name}</div>
+            <div class="count">${m.count.toLocaleString()} prospects (${m.overall_conversion_rate}% of total)</div>
+          </div>
+          <div class="funnel-bar-container">
+            <div class="funnel-bar-fill" style="width: ${pctWidth}%; background: ${color};">
+              ${m.step_conversion_rate !== null ? m.step_conversion_rate.toFixed(1) + '% Step' : '100% Entry'}
+            </div>
+          </div>
+          <div class="funnel-dropoff-pill">
+            ${m.step_dropoff_rate !== null ? `
+              <div class="drop-rate">-${m.step_dropoff_rate.toFixed(1)}% drop</div>
+              <div class="vdi-loss">-$${Math.round(m.value_dropoff_dollars).toLocaleString()} lost</div>
+            ` : '<div style="color:var(--text-muted); font-size:0.8rem;">Top-of-Funnel</div>'}
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    function renderDiagnosis(diag) {
+      document.getElementById("ai-headline").textContent = diag.executive_headline;
+      document.getElementById("ai-explanation").textContent = diag.core_paradox_explanation;
+
+      const stepsContainer = document.getElementById("ai-action-steps");
+      stepsContainer.innerHTML = "";
+
+      (diag.prescriptive_action_plan || []).forEach(step => {
+        const div = document.createElement("div");
+        div.className = "action-step";
+        div.innerHTML = `
+          <div class="action-badge">${step.timeframe}</div>
+          <h4>${step.action}</h4>
+          <p>${step.detail}</p>
+          <div class="action-impact">Target: ${step.expected_impact}</div>
+        `;
+        stepsContainer.appendChild(div);
+      });
+    }
+
+    function renderCampaigns(campaigns) {
+      const tbody = document.getElementById("campaign-tbody");
+      tbody.innerHTML = "";
+
+      campaigns.forEach(c => {
+        const tr = document.createElement("tr");
+        let badgeClass = "badge-mod";
+        if (c.efficiency_status === "TOXIC_VOLUME") badgeClass = "badge-toxic";
+        if (c.efficiency_status === "HIGH_YIELD") badgeClass = "badge-highyield";
+
+        tr.innerHTML = `
+          <td style="font-weight:600; color:#fff;">${c.campaign}</td>
+          <td>$${Math.round(c.spend).toLocaleString()}</td>
+          <td>${c.leads.toLocaleString()}</td>
+          <td>${c.lead_share_pct.toFixed(1)}%</td>
+          <td style="font-weight:700; color:${c.linear_revenue > 500000 ? 'var(--accent-emerald)' : '#fff'}">$${Math.round(c.linear_revenue).toLocaleString()}</td>
+          <td style="font-weight:700;">${c.linear_roas.toFixed(2)}x</td>
+          <td style="color:${c.disconnect_ratio > 3 ? 'var(--accent-rose)' : 'var(--text-muted)'}; font-weight:700;">${c.disconnect_ratio.toFixed(1)}x</td>
+          <td><span class="badge-status ${badgeClass}">${c.efficiency_status}</span></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderQuality(qual) {
+      const emailBox = document.getElementById("email-quality-body");
+      const work = qual.email_domain_breakdown.work_email;
+      const pers = qual.email_domain_breakdown.personal_email;
+
+      emailBox.innerHTML = `
+        <div style="margin-bottom:12px; display:flex; justify-content:space-between;">
+          <span>🏢 <strong>Work Email:</strong> ${work.count.toLocaleString()} leads (${work.share_pct}%)</span>
+          <span style="color:var(--accent-emerald); font-weight:700;">SQL: ${work.sql_rate}% | Win: ${work.win_rate}%</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span>📧 <strong>Personal Email:</strong> ${pers.count.toLocaleString()} leads (${pers.share_pct}%)</span>
+          <span style="color:var(--accent-rose); font-weight:700;">SQL: ${pers.sql_rate}% | Win: ${pers.win_rate}%</span>
+        </div>
+      `;
+
+      const icpBox = document.getElementById("icp-tiers-body");
+      const low = qual.icp_tier_breakdown.low_icp_under_50;
+      const mid = qual.icp_tier_breakdown.mid_icp_50_to_75;
+      const high = qual.icp_tier_breakdown.high_icp_above_75;
+
+      icpBox.innerHTML = `
+        <div style="margin-bottom:6px; display:flex; justify-content:space-between;">
+          <span>Low ICP (&lt;50): ${low.share_pct}%</span>
+          <span style="color:var(--accent-rose);">SQL: ${low.sql_rate}% | Close: ${low.win_rate}%</span>
+        </div>
+        <div style="margin-bottom:6px; display:flex; justify-content:space-between;">
+          <span>Mid ICP (50-75): ${mid.share_pct}%</span>
+          <span style="color:var(--accent-amber);">SQL: ${mid.sql_rate}% | Close: ${mid.win_rate}%</span>
+        </div>
+        <div style="display:flex; justify-content:space-between;">
+          <span>High ICP (&gt;75): ${high.share_pct}%</span>
+          <span style="color:var(--accent-emerald); font-weight:700;">SQL: ${high.sql_rate}% | Close: ${high.win_rate}%</span>
+        </div>
+      `;
+    }
+
+    async function updateSimulation(val) {
+      document.getElementById("slider-val").textContent = `${val}%`;
+      try {
+        const res = await fetch("/api/simulator/reallocate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ shift_toxic_pct: parseFloat(val) })
+        });
+        const data = await res.json();
+        document.getElementById("sim-capital").textContent = "$" + Math.round(data.capital_reallocated_dollars).toLocaleString();
+        document.getElementById("sim-new-rev").textContent = "$" + Math.round(data.simulated_new_revenue).toLocaleString();
+        document.getElementById("sim-lift").textContent = `+$${Math.round(data.net_revenue_lift).toLocaleString()} (+${data.revenue_growth_pct}%)`;
+        document.getElementById("sim-roas").textContent = `${data.new_blended_roas.toFixed(2)}x`;
+      } catch (err) {
+        console.error("Simulator error", err);
+      }
+    }
+
+    async function fetchDiagnosis() {
+      const btn = document.querySelector(".btn-action");
+      btn.textContent = "Analyzing...";
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/ai/diagnose");
+        const data = await res.json();
+        renderDiagnosis(data.diagnostics);
+      } finally {
+        btn.textContent = "Re-Analyze AI";
+        btn.disabled = false;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", loadData);
+  </script>
+</body>
+</html>

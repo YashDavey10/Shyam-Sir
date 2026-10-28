@@ -1,0 +1,2314 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATTRIB.AI — Marketing-to-Revenue Attribution & Funnel Intelligence</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/static/custom.css">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            900: '#312e81'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans antialiased">
+
+    <!-- TOP PERSISTENT DEMO BANNER -->
+    <div id="syntheticBanner" class="bg-gradient-to-r from-amber-600 to-amber-700 text-white text-xs font-semibold py-1.5 px-4 text-center tracking-wide flex items-center justify-center space-x-2 shadow-md">
+        <i data-lucide="alert-triangle" class="w-4 h-4"></i>
+        <span id="bannerText">SYNTHETIC DEMO DATA — Illustrative 12-Month Multi-Touch B2B SaaS Benchmark (Reproducible Seed)</span>
+        <button onclick="switchTab('governance')" class="underline hover:text-amber-200 ml-3 text-[11px]">Manage Data / Upload Real CSVs</button>
+    </div>
+
+    <!-- MAIN APP HEADER -->
+    <header class="bg-slate-950/80 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <i data-lucide="layers" class="w-6 h-6 text-white"></i>
+            </div>
+            <div>
+                <div class="flex items-center space-x-2">
+                    <h1 class="text-xl font-bold tracking-tight text-white">ATTRIB<span class="text-indigo-400">.AI</span></h1>
+                    <span class="px-2 py-0.5 text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 rounded border border-indigo-500/30">v2.4 Enterprise</span>
+                </div>
+                <p class="text-xs text-slate-400">Marketing-to-Revenue Attribution & Funnel Intelligence Decision System</p>
+            </div>
+        </div>
+
+        <!-- Global Header Controls -->
+        <div class="flex items-center space-x-3">
+            <!-- Global Dataset Profile Selector -->
+            <div class="flex items-center space-x-2 bg-slate-900 border border-indigo-500/40 rounded-lg px-2.5 py-1 shadow-sm">
+                <span class="text-[11px] text-indigo-400 font-bold flex items-center gap-1">
+                    <i data-lucide="database" class="w-3.5 h-3.5"></i>
+                    <span>Dataset:</span>
+                </span>
+                <select id="globalDatasetSelect" onchange="onGlobalDatasetChange(this.value)" class="bg-transparent text-xs text-white font-semibold focus:outline-none cursor-pointer">
+                    <option value="synthetic_b2b" class="bg-slate-900 text-white" selected>Synthetic B2B SaaS Benchmark (12M)</option>
+                    <option value="ga4_sample_ecommerce" class="bg-slate-900 text-white">Google Analytics 4 eCommerce (BigQuery)</option>
+                    <option value="retailrocket_ecommerce" class="bg-slate-900 text-white">Retailrocket Behavior (Kaggle)</option>
+                    <option value="uci_online_retail" class="bg-slate-900 text-white">UCI Online Retail (UCI Repo)</option>
+                </select>
+                <span id="datasetCategoryBadge" class="text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">SYNTHETIC</span>
+            </div>
+
+            <!-- Global Attribution Model Selector -->
+            <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1">
+                <span class="text-[11px] text-slate-400 font-medium">Model:</span>
+                <select id="globalModelSelect" onchange="onGlobalModelChange(this.value)" class="bg-transparent text-xs text-indigo-300 font-semibold focus:outline-none cursor-pointer">
+                    <option value="position_based" class="bg-slate-900 text-white" selected>Position-Based (40/20/40)</option>
+                    <option value="first_touch" class="bg-slate-900 text-white">First-Touch</option>
+                    <option value="last_touch" class="bg-slate-900 text-white">Last-Touch</option>
+                    <option value="linear" class="bg-slate-900 text-white">Linear</option>
+                    <option value="time_decay" class="bg-slate-900 text-white">Time-Decay (14d)</option>
+                    <option value="data_driven" class="bg-slate-900 text-white">Data-Driven (Markov)</option>
+                </select>
+            </div>
+
+            <!-- Segment Filter -->
+            <div class="flex items-center space-x-2 bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1">
+                <span class="text-[11px] text-slate-400 font-medium">Segment:</span>
+                <select id="globalSegmentSelect" onchange="onGlobalFilterChange()" class="bg-transparent text-xs text-slate-200 font-medium focus:outline-none cursor-pointer">
+                    <option value="" class="bg-slate-900 text-white">All Segments</option>
+                    <option value="Enterprise" class="bg-slate-900 text-white">Enterprise</option>
+                    <option value="Mid-Market" class="bg-slate-900 text-white">Mid-Market</option>
+                    <option value="SMB" class="bg-slate-900 text-white">SMB</option>
+                </select>
+            </div>
+
+            <div class="flex items-center space-x-1.5 px-3 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="font-medium text-[11px]">8 Agents Active</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- NAVIGATION TABS -->
+    <nav class="bg-slate-950 border-b border-slate-800/80 px-6 overflow-x-auto flex space-x-1">
+        <button onclick="switchTab('overview')" id="tab-overview" class="nav-tab active-tab px-4 py-3 text-xs font-semibold flex items-center space-x-2 border-b-2 border-indigo-500 text-indigo-400 transition-colors whitespace-nowrap">
+            <i data-lucide="layout-dashboard" class="w-4 h-4"></i>
+            <span>1. Executive Overview</span>
+        </button>
+        <button onclick="switchTab('journeys')" id="tab-journeys" class="nav-tab px-4 py-3 text-xs font-medium flex items-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors whitespace-nowrap">
+            <i data-lucide="git-merge" class="w-4 h-4"></i>
+            <span>2. Journey Explorer</span>
+        </button>
+        <button onclick="switchTab('funnel')" id="tab-funnel" class="nav-tab px-4 py-3 text-xs font-medium flex items-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors whitespace-nowrap">
+            <i data-lucide="filter" class="w-4 h-4"></i>
+            <span>3. Funnel Leakage</span>
+        </button>
+        <button onclick="switchTab('attribution')" id="tab-attribution" class="nav-tab px-4 py-3 text-xs font-medium flex items-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors whitespace-nowrap">
+            <i data-lucide="pie-chart" class="w-4 h-4"></i>
+            <span>4. Attribution Models</span>
+        </button>
+        <button onclick="switchTab('campaigns')" id="tab-campaigns" class="nav-tab px-4 py-3 text-xs font-medium flex items-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors whitespace-nowrap">
+            <i data-lucide="trending-up" class="w-4 h-4"></i>
+            <span>5. Campaign Economics</span>
+        </button>
+        <button onclick="switchTab('diagnostics')" id="tab-diagnostics" class="nav-tab px-4 py-3 text-xs font-medium flex items-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors whitespace-nowrap">
+            <i data-lucide="activity" class="w-4 h-4"></i>
+            <span>6. Revenue Diagnostics</span>
+        </button>
+        <button onclick="switchTab('simulator')" id="tab-simulator" class="nav-tab px-4 py-3 text-xs font-medium flex items-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors whitespace-nowrap">
+            <i data-lucide="sliders" class="w-4 h-4"></i>
+            <span>7. Budget Simulator</span>
+        </button>
+        <button onclick="switchTab('advisor')" id="tab-advisor" class="nav-tab px-4 py-3 text-xs font-medium flex items-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors whitespace-nowrap">
+            <i data-lucide="message-square" class="w-4 h-4"></i>
+            <span>8. AI Advisor</span>
+        </button>
+        <button onclick="switchTab('governance')" id="tab-governance" class="nav-tab px-4 py-3 text-xs font-medium flex items-center space-x-2 border-b-2 border-transparent text-slate-400 hover:text-slate-200 transition-colors whitespace-nowrap">
+            <i data-lucide="shield-check" class="w-4 h-4"></i>
+            <span>9. Data & Governance</span>
+        </button>
+    </nav>
+
+    <!-- CONTENT CONTAINER -->
+    <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+
+        <!-- ========================================================= -->
+        <!-- PAGE 1: EXECUTIVE REVENUE OVERVIEW -->
+        <!-- ========================================================= -->
+        <section id="page-overview" class="page-view space-y-6">
+            <!-- DATASET PROVENANCE & METHODOLOGY LIMITATIONS PANEL -->
+            <div id="datasetProvenanceCard" class="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/40 border border-indigo-500/30 rounded-xl p-4 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800 pb-3">
+                    <div class="flex items-center space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/50 flex items-center justify-center text-indigo-400">
+                            <i data-lucide="database" class="w-4 h-4"></i>
+                        </div>
+                        <div>
+                            <div class="flex items-center space-x-2">
+                                <span class="text-xs font-bold text-white uppercase tracking-wider">Analysis Dataset:</span>
+                                <h2 id="provDatasetName" class="text-sm font-bold text-indigo-300">Synthetic B2B SaaS Benchmark (12 Months)</h2>
+                                <span id="provCategoryBadge" class="text-[9px] font-bold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40">SYNTHETIC BENCHMARK</span>
+                            </div>
+                            <p id="provDateAndSource" class="text-[11px] text-slate-400 mt-0.5">
+                                Date Range: <span id="provDateRange" class="text-slate-200 font-mono">2024-11-01 to 2025-10-31</span> • 
+                                License: <span id="provLicense" class="text-slate-200">MIT Open Source</span> • 
+                                Source: <a id="provSourceUrl" href="#" target="_blank" class="text-indigo-400 underline hover:text-indigo-300">Internal Benchmark Engine</a>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-2 text-xs">
+                        <button onclick="downloadAuditReport('markdown')" title="Download comprehensive Data Quality & Financial Reconciliation Audit Report" class="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 transition shadow">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            <span>Audit Report</span>
+                        </button>
+                        <span class="text-slate-400 text-[11px]">Quick Switch:</span>
+                        <select id="provDatasetDropdown" onchange="onGlobalDatasetChange(this.value)" class="bg-slate-950 border border-slate-700 text-xs text-indigo-200 font-semibold rounded-lg px-2.5 py-1.5 focus:outline-none">
+                            <option value="synthetic_b2b" selected>Synthetic B2B SaaS Benchmark (12M)</option>
+                            <option value="ga4_sample_ecommerce">Google Analytics 4 eCommerce (BigQuery)</option>
+                            <option value="retailrocket_ecommerce">Retailrocket eCommerce (Kaggle)</option>
+                            <option value="uci_online_retail">UCI Online Retail (UCI Repo)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Provenance Narrative & Limitations Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3.5 pt-3 text-xs">
+                    <div>
+                        <span class="text-slate-400 font-semibold uppercase text-[10px] tracking-wider block mb-1">Data Provenance</span>
+                        <p id="provDescriptionText" class="text-slate-300 text-[11px] leading-relaxed">
+                            Reproducible 12-month multi-touch B2B SaaS benchmark generated deterministically via seed 42. Simulates 18 campaigns, 42,110 touchpoints, 1,781 leads, 392 opportunities, and 72 paying customers.
+                        </p>
+                    </div>
+                    <div>
+                        <span class="text-emerald-400 font-semibold uppercase text-[10px] tracking-wider block mb-1">Supported Metrics (Grounded in Verified Fields)</span>
+                        <div id="provSupportedMetricsTags" class="flex flex-wrap gap-1 mt-1">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-amber-400 font-semibold uppercase text-[10px] tracking-wider block mb-1">Unavailable Metrics & Methodological Limitations</span>
+                        <div id="provUnavailableMetricsTags" class="flex flex-wrap gap-1 mt-1">
+                            <!-- Injected dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Executive KPI Ribbon -->
+            <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 stat-card">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-xs font-medium">Total Marketing Spend</span>
+                        <i data-lucide="dollar-sign" class="w-4 h-4 text-indigo-400"></i>
+                    </div>
+                    <div id="kpi-spend" class="text-xl font-bold text-white tracking-tight">$0.00</div>
+                    <div class="text-[11px] text-slate-400 mt-1">18 Active Campaigns</div>
+                </div>
+
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 stat-card">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-xs font-medium">Leads Generated</span>
+                        <i data-lucide="users" class="w-4 h-4 text-blue-400"></i>
+                    </div>
+                    <div id="kpi-leads" class="text-xl font-bold text-white tracking-tight">0</div>
+                    <div id="kpi-cpl" class="text-[11px] text-slate-400 mt-1">CPL: $0.00</div>
+                </div>
+
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 stat-card">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-xs font-medium">Qualified Pipeline (SQL)</span>
+                        <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+                    </div>
+                    <div id="kpi-sqls" class="text-xl font-bold text-white tracking-tight">0</div>
+                    <div id="kpi-sql-rate" class="text-[11px] text-slate-400 mt-1">0% MQL-to-SQL</div>
+                </div>
+
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 stat-card">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-xs font-medium">Closed-Won Deals</span>
+                        <i data-lucide="award" class="w-4 h-4 text-amber-400"></i>
+                    </div>
+                    <div id="kpi-customers" class="text-xl font-bold text-white tracking-tight">0</div>
+                    <div id="kpi-cac" class="text-[11px] text-slate-400 mt-1">CAC: $0.00</div>
+                </div>
+
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 stat-card">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-xs font-medium">Realized Revenue</span>
+                        <i data-lucide="trending-up" class="w-4 h-4 text-emerald-400"></i>
+                    </div>
+                    <div id="kpi-revenue" class="text-xl font-bold text-emerald-400 tracking-tight">$0.00</div>
+                    <div id="kpi-roas" class="text-[11px] text-slate-400 mt-1">ROAS: 0.0x</div>
+                </div>
+
+                <div class="bg-slate-800/80 border border-slate-700/60 rounded-xl p-4 stat-card">
+                    <div class="flex items-center justify-between text-slate-400 mb-1">
+                        <span class="text-xs font-medium">Contribution Margin</span>
+                        <i data-lucide="briefcase" class="w-4 h-4 text-purple-400"></i>
+                    </div>
+                    <div id="kpi-margin" class="text-xl font-bold text-purple-300 tracking-tight">$0.00</div>
+                    <div id="kpi-margin-rate" class="text-[11px] text-slate-400 mt-1">Margin: 0%</div>
+                </div>
+            </div>
+
+            <!-- Two Column Overview: Funnel Chart & Revenue by Channel -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- 11-Stage Macro Funnel Progression -->
+                <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-white">11-Stage Revenue Funnel Progression</h3>
+                            <p class="text-xs text-slate-400">End-to-end conversion from marketing impressions to contribution profit</p>
+                        </div>
+                        <button onclick="switchTab('funnel')" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center space-x-1">
+                            <span>Deep Dive</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <div class="relative h-72">
+                        <canvas id="overviewFunnelChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Attributed Revenue by Channel -->
+                <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-sm font-semibold text-white">Realized Revenue vs Ad Spend by Channel</h3>
+                            <p class="text-xs text-slate-400" id="overviewChannelSub">Allocated under selected attribution model</p>
+                        </div>
+                        <button onclick="switchTab('attribution')" class="text-xs text-indigo-400 hover:text-indigo-300 font-medium flex items-center space-x-1">
+                            <span>Compare Models</span>
+                            <i data-lucide="arrow-right" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                    <div class="relative h-72">
+                        <canvas id="overviewChannelChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Commercial Leakage Quick Banner -->
+            <div id="overviewLeakageBanner" class="bg-gradient-to-r from-rose-950/60 to-slate-900 border border-rose-900/60 rounded-xl p-4 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                <div class="flex items-start space-x-3">
+                    <div class="p-2 bg-rose-500/20 rounded-lg text-rose-400">
+                        <i data-lucide="alert-octagon" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center space-x-2">
+                            <span class="text-xs font-bold text-rose-400 uppercase tracking-wider">Top Detected Commercial Bottleneck</span>
+                            <span id="overviewLeakSeverity" class="px-2 py-0.5 text-[10px] font-semibold bg-rose-500/20 text-rose-300 rounded">CRITICAL</span>
+                        </div>
+                        <h4 id="overviewLeakTitle" class="text-sm font-semibold text-white mt-0.5">Detecting funnel leakages...</h4>
+                        <p id="overviewLeakDesc" class="text-xs text-slate-300 mt-0.5">Evaluating stage progression anomalies...</p>
+                    </div>
+                </div>
+                <button onclick="switchTab('diagnostics')" class="px-4 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold whitespace-nowrap shadow transition-colors">
+                    View Root Cause Analysis
+                </button>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 2: CUSTOMER JOURNEY EXPLORER -->
+        <!-- ========================================================= -->
+        <section id="page-journeys" class="page-view hidden space-y-6">
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Chronological Customer Journey Reconstruction</h3>
+                        <p class="text-xs text-slate-400">Inspect authorized multi-touch journeys, cookie drops, and sales acceleration</p>
+                    </div>
+                    
+                    <!-- Search Input & Quick Samples -->
+                    <div class="flex flex-wrap items-center gap-2">
+                        <input id="journeySearchInput" type="text" placeholder="Search Lead ID (e.g. lead_00001)..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 w-64">
+                        <button onclick="searchJourney()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold">Inspect</button>
+                        <select onchange="quickLoadJourney(this.value)" class="bg-slate-900 border border-slate-700 text-slate-300 text-xs rounded-lg px-2 py-1.5 focus:outline-none">
+                            <option value="">Quick Presets...</option>
+                            <option value="lead_00001">Lead #1 (Won Enterprise)</option>
+                            <option value="lead_00002">Lead #2 (Mid-Market Win)</option>
+                            <option value="lead_00010">Lead #10 (Delayed Follow-up)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Entity Profile Metadata Banner -->
+                <div id="journeyProfileBanner" class="hidden grid grid-cols-2 md:grid-cols-4 gap-3 p-3 bg-slate-900/80 rounded-lg border border-slate-800 text-xs mb-4">
+                    <div><span class="text-slate-400">Lead ID:</span> <span id="jp-lead-id" class="font-bold text-white">-</span></div>
+                    <div><span class="text-slate-400">Visitor ID:</span> <span id="jp-anon-id" class="text-slate-300 font-mono">-</span></div>
+                    <div><span class="text-slate-400">Customer Segment:</span> <span id="jp-segment" class="font-semibold text-indigo-300">-</span></div>
+                    <div><span class="text-slate-400">Total Touchpoints:</span> <span id="jp-touches" class="font-bold text-emerald-400">-</span></div>
+                    <div><span class="text-slate-400">Lead Score:</span> <span id="jp-score" class="font-semibold text-white">-</span></div>
+                    <div><span class="text-slate-400">Sales Rep:</span> <span id="jp-rep" class="text-slate-300">-</span></div>
+                    <div><span class="text-slate-400">Follow-up Delay:</span> <span id="jp-delay" class="font-semibold text-amber-400">-</span></div>
+                    <div><span class="text-slate-400">Outcome:</span> <span id="jp-outcome" class="font-bold text-white">-</span></div>
+                </div>
+
+                <!-- Timeline Container -->
+                <div id="journeyTimelineContainer" class="space-y-4">
+                    <p class="text-xs text-slate-400 text-center py-8">Select or search an entity identifier above to reconstruct its chronological journey.</p>
+                </div>
+            </div>
+
+            <!-- Path Frequency Breakdown Table -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                    <h4 class="text-sm font-semibold text-emerald-400 mb-1 flex items-center space-x-2">
+                        <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                        <span>Top Converting Channel Paths (Won Customers)</span>
+                    </h4>
+                    <p class="text-xs text-slate-400 mb-3">Sequences associated with successful closed-won revenue</p>
+                    <div id="convertingPathsList" class="space-y-2 text-xs">Loading paths...</div>
+                </div>
+
+                <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                    <h4 class="text-sm font-semibold text-slate-300 mb-1 flex items-center space-x-2">
+                        <i data-lucide="x-circle" class="w-4 h-4 text-rose-400"></i>
+                        <span>Top Non-Converting Paths (Funnel Drop-Off)</span>
+                    </h4>
+                    <p class="text-xs text-slate-400 mb-3">Common visitor journeys that exited without conversion</p>
+                    <div id="nonConvertingPathsList" class="space-y-2 text-xs">Loading paths...</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 3: FUNNEL LEAKAGE ANALYTICS -->
+        <!-- ========================================================= -->
+        <section id="page-funnel" class="page-view hidden space-y-6">
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Full 11-Stage Revenue Funnel Breakdown</h3>
+                        <p class="text-xs text-slate-400">Step-by-step entity volume, conversion rates, and volumetric drop-offs</p>
+                    </div>
+                    <div class="text-xs text-indigo-400 font-semibold bg-indigo-950/60 px-3 py-1 rounded-lg border border-indigo-800">
+                        Lead-to-Won Rate: <span id="funnelLeadToCustomerRate" class="font-bold">0.0%</span>
+                    </div>
+                </div>
+
+                <!-- 11-Stage Detailed Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-900/90 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-700">
+                            <tr>
+                                <th class="py-2.5 px-3">Funnel Stage</th>
+                                <th class="py-2.5 px-3">Entity Type</th>
+                                <th class="py-2.5 px-3 text-right">Volume</th>
+                                <th class="py-2.5 px-3 text-right">Stage Conv. %</th>
+                                <th class="py-2.5 px-3 text-right">Drop-Off Count</th>
+                                <th class="py-2.5 px-3 text-right">Drop-Off %</th>
+                                <th class="py-2.5 px-3 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="funnelStagesTableBody" class="divide-y divide-slate-800">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Velocities & Cohort Maturation -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Funnel Velocity -->
+                <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                    <h3 class="text-sm font-semibold text-white mb-1">Time-to-Conversion Velocities</h3>
+                    <p class="text-xs text-slate-400 mb-4">Median and 90th percentile sales cycle progression</p>
+                    
+                    <div class="grid grid-cols-2 gap-3 mb-4">
+                        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                            <span class="text-[11px] text-slate-400">Median Sales Cycle</span>
+                            <div id="velocityCycleMedian" class="text-lg font-bold text-white mt-0.5">0.0 Days</div>
+                            <span id="velocityCycleP90" class="text-[10px] text-slate-400">90th %ile: 0.0 Days</span>
+                        </div>
+                        <div class="bg-slate-900/80 p-3 rounded-lg border border-slate-800">
+                            <span class="text-[11px] text-slate-400">SDR Follow-Up Lag</span>
+                            <div id="velocitySdrMedian" class="text-lg font-bold text-amber-400 mt-0.5">0.0 Hrs</div>
+                            <span id="velocitySdrP90" class="text-[10px] text-slate-400">90th %ile: 0.0 Hrs</span>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-slate-300">
+                        <span class="font-medium text-slate-400">Median Sales Cycle by Customer Segment:</span>
+                        <div id="velocitySegmentList" class="mt-2 space-y-1.5">Loading...</div>
+                    </div>
+                </div>
+
+                <!-- Monthly Cohort Maturation -->
+                <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                    <div class="flex items-center justify-between mb-1">
+                        <h3 class="text-sm font-semibold text-white">Monthly Cohort Maturation</h3>
+                        <span class="text-[10px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30">Censoring Protected</span>
+                    </div>
+                    <p class="text-xs text-slate-400 mb-4">Recent cohorts flag in-flight opportunities still maturing</p>
+
+                    <div class="overflow-x-auto max-h-60 overflow-y-auto">
+                        <table class="w-full text-left text-xs text-slate-300">
+                            <thead class="bg-slate-900 text-slate-400 uppercase text-[10px] sticky top-0">
+                                <tr>
+                                    <th class="py-2 px-2">Cohort Month</th>
+                                    <th class="py-2 px-2 text-right">Opps</th>
+                                    <th class="py-2 px-2 text-right">Won</th>
+                                    <th class="py-2 px-2 text-right">Win Rate</th>
+                                    <th class="py-2 px-2 text-center">Cohort Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="cohortTableBody" class="divide-y divide-slate-800">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 4: ATTRIBUTION COMPARISON -->
+        <!-- ========================================================= -->
+        <section id="page-attribution" class="page-view hidden space-y-6">
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Multi-Model Marketing Attribution Comparison</h3>
+                        <p class="text-xs text-slate-400">Cross-model revenue allocation and touchpoint credit reconciliation audit</p>
+                    </div>
+
+                    <!-- Position-Based Custom Sliders -->
+                    <div class="flex flex-wrap items-center gap-3 bg-slate-900 p-2 rounded-lg border border-slate-800 text-xs">
+                        <span class="text-[11px] text-slate-400 font-medium">Position Weights:</span>
+                        <div class="flex items-center space-x-1">
+                            <span class="text-[10px] text-indigo-300">First:</span>
+                            <input id="wFirstInput" type="number" step="0.05" min="0" max="1" value="0.40" class="w-14 bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-white">
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <span class="text-[10px] text-indigo-300">Mid:</span>
+                            <input id="wMidInput" type="number" step="0.05" min="0" max="1" value="0.20" class="w-14 bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-white">
+                        </div>
+                        <div class="flex items-center space-x-1">
+                            <span class="text-[10px] text-indigo-300">Last:</span>
+                            <input id="wLastInput" type="number" step="0.05" min="0" max="1" value="0.40" class="w-14 bg-slate-800 border border-slate-700 rounded px-1.5 py-0.5 text-xs text-white">
+                        </div>
+                        <button onclick="recalculateCustomAttribution()" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-[11px] font-semibold">Apply</button>
+                    </div>
+                </div>
+
+                <!-- Attribution Audit Banner -->
+                <div id="attributionAuditBanner" class="p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-lg flex items-center justify-between text-xs text-emerald-300 mb-4">
+                    <div class="flex items-center space-x-2">
+                        <i data-lucide="shield-check" class="w-4 h-4 text-emerald-400"></i>
+                        <span id="attrReconciliationText">Reconciliation: 100% of realized revenue allocated. Sum of credits = 1.0 per conversion.</span>
+                    </div>
+                    <span class="text-[10px] text-slate-400 uppercase tracking-wide">Descriptive Correlation — Not Causal</span>
+                </div>
+
+                <!-- Cross-Model Chart -->
+                <div class="relative h-80 mb-6">
+                    <canvas id="attributionComparisonChart"></canvas>
+                </div>
+
+                <!-- Cross-Model Comparison Matrix Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-900 text-slate-400 uppercase text-[10px] border-b border-slate-700">
+                            <tr>
+                                <th class="py-2.5 px-3">Campaign</th>
+                                <th class="py-2.5 px-3">Channel</th>
+                                <th class="py-2.5 px-3 text-right">Spend</th>
+                                <th class="py-2.5 px-3 text-right">First-Touch</th>
+                                <th class="py-2.5 px-3 text-right">Last-Touch</th>
+                                <th class="py-2.5 px-3 text-right">Linear</th>
+                                <th class="py-2.5 px-3 text-right">Position-Based</th>
+                                <th class="py-2.5 px-3 text-right">Time-Decay</th>
+                                <th class="py-2.5 px-3 text-center">Role Classification</th>
+                            </tr>
+                        </thead>
+                        <tbody id="attributionMatrixTableBody" class="divide-y divide-slate-800">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 5: CAMPAIGN PERFORMANCE & ECONOMICS -->
+        <!-- ========================================================= -->
+        <section id="page-campaigns" class="page-view hidden space-y-6">
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Granular Campaign Unit Economics</h3>
+                        <p class="text-xs text-slate-400">CTR, CPL, Cost/MQL, CAC, ROAS, and Net Contribution Margin per Campaign</p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <input id="campaignSearchInput" onkeyup="filterCampaignTable()" type="text" placeholder="Filter campaigns..." class="bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500 w-52">
+                    </div>
+                </div>
+
+                <!-- Campaign Economics Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-900 text-slate-400 uppercase text-[10px] border-b border-slate-700">
+                            <tr>
+                                <th class="py-2.5 px-3">Campaign Name</th>
+                                <th class="py-2.5 px-3">Channel</th>
+                                <th class="py-2.5 px-3 text-right">Spend</th>
+                                <th class="py-2.5 px-3 text-right">Leads</th>
+                                <th class="py-2.5 px-3 text-right">MQL Rate</th>
+                                <th class="py-2.5 px-3 text-right">Attr. Customer Eq.</th>
+                                <th class="py-2.5 px-3 text-right">CAC</th>
+                                <th class="py-2.5 px-3 text-right">Realized Rev</th>
+                                <th class="py-2.5 px-3 text-right">Contribution</th>
+                                <th class="py-2.5 px-3 text-right">ROAS</th>
+                                <th class="py-2.5 px-3 text-center">Status Tier</th>
+                            </tr>
+                        </thead>
+                        <tbody id="campaignEconomicsTableBody" class="divide-y divide-slate-800">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Financial Line Items Breakdown: Booked vs Realized -->
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <h4 class="text-sm font-semibold text-white mb-1">Financial Reconciliation: Booked ACV vs Net Realized Margin</h4>
+                <p class="text-xs text-slate-400 mb-4">Audit trail of discounts, cancellations, and professional services delivery costs</p>
+
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 text-[11px]">Booked Contract ACV</span>
+                        <div id="fin-booked" class="text-base font-bold text-white mt-1">$0.00</div>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 text-[11px]">Gross Discounts</span>
+                        <div id="fin-discounts" class="text-base font-bold text-rose-400 mt-1">-$0.00</div>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 text-[11px]">Refunds / Cancels</span>
+                        <div id="fin-refunds" class="text-base font-bold text-amber-400 mt-1">-$0.00</div>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 text-[11px]">Net Realized Revenue</span>
+                        <div id="fin-realized" class="text-base font-bold text-emerald-400 mt-1">$0.00</div>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 text-[11px]">Variable Service Costs</span>
+                        <div id="fin-delivery" class="text-base font-bold text-purple-400 mt-1">-$0.00</div>
+                    </div>
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 text-[11px]">Net Contribution Margin</span>
+                        <div id="fin-margin" class="text-base font-bold text-purple-300 mt-1">$0.00</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 6: REVENUE DIAGNOSTICS & BOTTLENECK REMEDIATION -->
+        <!-- ========================================================= -->
+        <section id="page-diagnostics" class="page-view hidden space-y-6">
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Funnel Leakage & Root-Cause Intelligence Agent</h3>
+                        <p class="text-xs text-slate-400">Automated diagnostic inspection identifying where marketing capital is destroyed</p>
+                    </div>
+                    <div class="text-xs bg-rose-950/80 text-rose-300 px-3 py-1.5 rounded-lg border border-rose-800 font-semibold">
+                        Total Remediable Drag: <span id="diagTotalDrag" class="font-bold">$0.00</span>
+                    </div>
+                </div>
+
+                <!-- Leakage Issue Cards -->
+                <div id="diagnosticsIssuesContainer" class="space-y-4">
+                    <p class="text-xs text-slate-400 py-6 text-center">Detecting funnel bottlenecks...</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 7: BUDGET SCENARIO SIMULATOR -->
+        <!-- ========================================================= -->
+        <section id="page-simulator" class="page-view hidden space-y-6">
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-5">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Constrained Marketing Budget Reallocation Simulator</h3>
+                        <p class="text-xs text-slate-400">SciPy SLSQP optimization under diminishing returns with strict sum-to-100% enforcement</p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button onclick="runBudgetSimulation()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 shadow">
+                            <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+                            <span>Re-Simulate Optimization</span>
+                        </button>
+                        <button onclick="openApprovalModal()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 shadow">
+                            <i data-lucide="check" class="w-3.5 h-3.5"></i>
+                            <span>Approve Scenario</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Interactive Simulation Sliders -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-slate-900/90 rounded-xl border border-slate-800 mb-6 text-xs">
+                    <div>
+                        <div class="flex justify-between text-slate-300 mb-1">
+                            <span>Total Annual Budget ($):</span>
+                            <span id="sliderBudgetValue" class="font-bold text-white">$1,900,000</span>
+                        </div>
+                        <input id="sliderBudget" type="range" min="1000000" max="3000000" step="50000" value="1900000" oninput="updateSliderValue('sliderBudget', 'sliderBudgetValue', '$')" onchange="runBudgetSimulation()" class="w-full accent-indigo-500">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-slate-300 mb-1">
+                            <span>Max Cycle Shift Cap:</span>
+                            <span id="sliderShiftValue" class="font-bold text-white">±25%</span>
+                        </div>
+                        <input id="sliderShift" type="range" min="0.10" max="0.50" step="0.05" value="0.25" oninput="updateSliderValue('sliderShift', 'sliderShiftValue', '%', 100)" onchange="runBudgetSimulation()" class="w-full accent-indigo-500">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-slate-300 mb-1">
+                            <span>Min Channel Floor:</span>
+                            <span id="sliderFloorValue" class="font-bold text-white">4%</span>
+                        </div>
+                        <input id="sliderFloor" type="range" min="0.02" max="0.10" step="0.01" value="0.04" oninput="updateSliderValue('sliderFloor', 'sliderFloorValue', '%', 100)" onchange="runBudgetSimulation()" class="w-full accent-indigo-500">
+                    </div>
+
+                    <div>
+                        <div class="flex justify-between text-slate-300 mb-1">
+                            <span>Conversion Boost Assumption:</span>
+                            <span id="sliderBoostValue" class="font-bold text-white">+0%</span>
+                        </div>
+                        <input id="sliderBoost" type="range" min="0" max="20" step="2" value="0" oninput="updateSliderValue('sliderBoost', 'sliderBoostValue', '%')" onchange="runBudgetSimulation()" class="w-full accent-indigo-500">
+                    </div>
+                </div>
+
+                <!-- Three Scenarios Cards (Conservative, Base, Optimistic) -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                        <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+                            <span class="font-semibold text-slate-300">Conservative Scenario</span>
+                            <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">85% Likelihood</span>
+                        </div>
+                        <div id="scen-cons-rev" class="text-xl font-bold text-white mt-1">$0.00</div>
+                        <div id="scen-cons-profit" class="text-xs text-emerald-400 mt-0.5">+$0.00 Net Margin Lift</div>
+                        <p id="scen-cons-notes" class="text-[11px] text-slate-400 mt-2">Captures 55% of marginal efficiency response.</p>
+                    </div>
+
+                    <div class="bg-indigo-950/40 border border-indigo-700/60 rounded-xl p-4 shadow-sm">
+                        <div class="flex items-center justify-between text-xs text-indigo-300 mb-1">
+                            <span class="font-semibold text-indigo-200">Base Scenario (Target)</span>
+                            <span class="text-[10px] bg-indigo-900/60 text-indigo-300 px-2 py-0.5 rounded font-bold">Recommended</span>
+                        </div>
+                        <div id="scen-base-rev" class="text-xl font-bold text-indigo-300 mt-1">$0.00</div>
+                        <div id="scen-base-profit" class="text-xs text-emerald-400 mt-0.5">+$0.00 Net Margin Lift</div>
+                        <p id="scen-base-notes" class="text-[11px] text-slate-300 mt-2">Standard logarithmic diminishing returns.</p>
+                    </div>
+
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+                        <div class="flex items-center justify-between text-xs text-slate-400 mb-1">
+                            <span class="font-semibold text-slate-300">Optimistic Scenario</span>
+                            <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">15% Upside</span>
+                        </div>
+                        <div id="scen-opt-rev" class="text-xl font-bold text-white mt-1">$0.00</div>
+                        <div id="scen-opt-profit" class="text-xs text-emerald-400 mt-0.5">+$0.00 Net Margin Lift</div>
+                        <p id="scen-opt-notes" class="text-[11px] text-slate-400 mt-2">Combined with accelerated SDR response SLAs.</p>
+                    </div>
+                </div>
+
+                <!-- Channel Reallocation Comparison Table -->
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-900 text-slate-400 uppercase text-[10px] border-b border-slate-700">
+                            <tr>
+                                <th class="py-2.5 px-3">Marketing Channel</th>
+                                <th class="py-2.5 px-3 text-right">Current Spend</th>
+                                <th class="py-2.5 px-3 text-right">Proposed Spend</th>
+                                <th class="py-2.5 px-3 text-right">Budget Delta ($)</th>
+                                <th class="py-2.5 px-3 text-right">Delta %</th>
+                                <th class="py-2.5 px-3 text-right">Projected Rev</th>
+                                <th class="py-2.5 px-3 text-right">Projected CAC</th>
+                                <th class="py-2.5 px-3 text-center">Recommended Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reallocationTableBody" class="divide-y divide-slate-800">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 8: MARKETING INTELLIGENCE ADVISOR -->
+        <!-- ========================================================= -->
+        <section id="page-advisor" class="page-view hidden space-y-6">
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Executive Marketing Intelligence Advisor</h3>
+                        <p class="text-xs text-slate-400">Strictly grounded Q&A citing verified metrics, reporting periods, and data sources</p>
+                    </div>
+                    <span class="text-xs text-indigo-400 bg-indigo-950/60 px-2.5 py-1 rounded border border-indigo-800 flex items-center space-x-1">
+                        <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+                        <span>Zero Hallucination Guardrail</span>
+                    </span>
+                </div>
+
+                <!-- Quick Prompt Buttons -->
+                <div class="flex flex-wrap gap-2 mb-4">
+                    <button onclick="askPreset('Why are leads increasing but revenue is flat?')" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-indigo-300 border border-slate-700/80 rounded-lg text-xs">
+                        Why are leads increasing but revenue is flat?
+                    </button>
+                    <button onclick="askPreset('Which stage has the greatest leakage?')" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-indigo-300 border border-slate-700/80 rounded-lg text-xs">
+                        Which stage has the greatest leakage?
+                    </button>
+                    <button onclick="askPreset('Which campaigns generate the most qualified customers?')" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-indigo-300 border border-slate-700/80 rounded-lg text-xs">
+                        Which campaigns generate the most qualified customers?
+                    </button>
+                    <button onclick="askPreset('Why do first-touch and last-touch rankings differ?')" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-indigo-300 border border-slate-700/80 rounded-lg text-xs">
+                        Why do first-touch and last-touch rankings differ?
+                    </button>
+                    <button onclick="askPreset('What additional data is required to assess incrementality?')" class="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-indigo-300 border border-slate-700/80 rounded-lg text-xs">
+                        What data is needed for incrementality?
+                    </button>
+                </div>
+
+                <!-- Chat Log Display -->
+                <div id="advisorChatContainer" class="bg-slate-950/90 rounded-xl p-4 border border-slate-800 min-h-[350px] max-h-[500px] overflow-y-auto space-y-4 mb-4">
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0">
+                            <i data-lucide="bot" class="w-4 h-4"></i>
+                        </div>
+                        <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 max-w-2xl space-y-2">
+                            <p class="font-medium text-white">Welcome to ATTRIB.AI Executive Advisor.</p>
+                            <p class="text-slate-400">I am connected to the 8 analytical agents. Ask any question about campaign performance, funnel drop-offs, attribution discrepancies, or budget scenarios. Every answer is strictly grounded in verified data.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input Box -->
+                <div class="flex items-center space-x-2">
+                    <input id="advisorQueryInput" onkeydown="if(event.key==='Enter') sendAdvisorQuery()" type="text" placeholder="Type your management question here..." class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-xs text-white focus:outline-none focus:border-indigo-500">
+                    <button onclick="sendAdvisorQuery()" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 shadow">
+                        <span>Send Query</span>
+                        <i data-lucide="send" class="w-3.5 h-3.5"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ========================================================= -->
+        <!-- PAGE 9: DATA MANAGEMENT & GOVERNANCE -->
+        <!-- ========================================================= -->
+        <section id="page-governance" class="page-view hidden space-y-6">
+            <!-- Data Ingestion & Reset Bar -->
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Data Ingestion, Lineage & Reconciled Line Items</h3>
+                        <p class="text-xs text-slate-400">Upload real company CSVs, inspect validation lineage, and audit system decisions</p>
+                    </div>
+
+                    <div class="flex items-center space-x-2">
+                        <button onclick="downloadAuditReport('markdown')" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold flex items-center space-x-1.5 shadow">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            <span>Download Audit & Reconciliation Report</span>
+                        </button>
+                        <button onclick="openUploadModal()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold flex items-center space-x-1">
+                            <i data-lucide="upload" class="w-3.5 h-3.5"></i>
+                            <span>Upload CSV / Excel</span>
+                        </button>
+                        <button onclick="resetSyntheticData()" class="px-3.5 py-1.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg text-xs font-semibold flex items-center space-x-1">
+                            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+                            <span>Reset to Synthetic Demo</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Loaded Datasets Status -->
+                <div id="governanceDatasetsSummary" class="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs mb-4">
+                    Loading dataset status...
+                </div>
+            </div>
+
+            <!-- Public Dataset Profiles & Provenance Registry -->
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Public Dataset Profiles & Provenance Registry</h3>
+                        <p class="text-xs text-slate-400">Strictly isolated, single-source public & benchmark datasets with verified schemas, licenses, and supported metrics</p>
+                    </div>
+                    <span class="text-[11px] bg-indigo-500/20 text-indigo-300 px-2.5 py-1 rounded border border-indigo-500/30 font-semibold flex items-center space-x-1.5">
+                        <i data-lucide="database" class="w-3.5 h-3.5"></i>
+                        <span>4 Verified Profiles</span>
+                    </span>
+                </div>
+
+                <div id="governanceProfilesContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <p class="text-slate-500">Loading dataset profiles...</p>
+                </div>
+            </div>
+
+            <!-- Incrementality & Lift Experiments Sub-Section -->
+            <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-base font-semibold text-white">Incrementality & Experimentation Engine</h3>
+                        <p class="text-xs text-slate-400">Randomized holdouts, campaign lift tests, and counterfactual significance (Z-Score & 95% CI)</p>
+                    </div>
+                    <span class="text-[11px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded border border-amber-500/30 font-semibold">
+                        SIMULATED EXPERIMENTS
+                    </span>
+                </div>
+
+                <div id="experimentsContainer" class="space-y-4">
+                    Loading incrementality tests...
+                </div>
+            </div>
+
+            <!-- Audit Trail & Approval Log -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Budget Approval Log -->
+                <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                    <h4 class="text-sm font-semibold text-white mb-1">Human Budget Approval Audit Store</h4>
+                    <p class="text-xs text-slate-400 mb-3">Immutable SQLite record of approved marketing budget reallocations</p>
+                    <div id="approvalsListContainer" class="space-y-2 text-xs max-h-60 overflow-y-auto">
+                        Loading approval log...
+                    </div>
+                </div>
+
+                <!-- System Audit Trail -->
+                <div class="bg-slate-800/70 border border-slate-700/60 rounded-xl p-5">
+                    <h4 class="text-sm font-semibold text-white mb-1">System Transformation & Security Audit Trail</h4>
+                    <p class="text-xs text-slate-400 mb-3">Recent ingestion events, deduplication, and schema validation logs</p>
+                    <div id="systemAuditTrailContainer" class="space-y-2 text-xs max-h-60 overflow-y-auto font-mono text-[11px]">
+                        Loading audit trail...
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-slate-950 border-t border-slate-800/80 px-6 py-4 text-xs text-slate-500 flex flex-col md:flex-row items-center justify-between gap-2">
+        <div>ATTRIB.AI — Enterprise Marketing-to-Revenue Attribution & Funnel Intelligence</div>
+        <div class="flex items-center space-x-4 text-[11px]">
+            <span>FastAPI Backend</span>
+            <span>•</span>
+            <span>SciPy SLSQP Optimizer</span>
+            <span>•</span>
+            <span>Markov Removal Attribution</span>
+            <span>•</span>
+            <span>SQLite Local DB</span>
+        </div>
+    </footer>
+
+    <!-- APPROVAL MODAL -->
+    <div id="approvalModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+                    <i data-lucide="shield-alert" class="w-4 h-4 text-emerald-400"></i>
+                    <span>Executive Budget Approval</span>
+                </h3>
+                <button onclick="closeApprovalModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            <p class="text-xs text-slate-300">You are about to sign off on the proposed budget reallocation scenario. This will commit the reallocation plan to the immutable audit store.</p>
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Approver Role / Name:</label>
+                    <input id="modalUserRole" type="text" value="VP Revenue Operations (Sarah Lin)" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Scenario Label:</label>
+                    <input id="modalScenarioName" type="text" value="Q4 Revenue Optimization - Base" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Executive Notes / Approval Justification:</label>
+                    <textarea id="modalNotes" rows="2" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs" placeholder="e.g. Approved shifting 20% budget from Meta broad leadgen to LinkedIn FinTech search."></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeApprovalModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-semibold">Cancel</button>
+                <button onclick="submitApproval()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded text-xs font-semibold">Confirm & Sign Off</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- UPLOAD MODAL -->
+    <div id="uploadModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+                    <i data-lucide="upload" class="w-4 h-4 text-indigo-400"></i>
+                    <span>Upload Dataset (.csv / .xlsx)</span>
+                </h3>
+                <button onclick="closeUploadModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-4 h-4"></i></button>
+            </div>
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block text-slate-400 mb-1">Target Table:</label>
+                    <select id="uploadTableSelect" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs">
+                        <option value="campaigns">Campaigns Table (spend, impressions, clicks)</option>
+                        <option value="touchpoints">Touchpoints Table (visitor_id, timestamp, channel)</option>
+                        <option value="leads">Leads Table (lead_id, created_date, mql, sql)</option>
+                        <option value="opportunities">Opportunities Table (opp_id, contract_value, stage)</option>
+                        <option value="revenue">Revenue Table (customer_id, realized_revenue, margin)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Select File:</label>
+                    <input id="uploadFileInput" type="file" accept=".csv,.xlsx,.xls" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1">Optional Column Mapping (JSON):</label>
+                    <textarea id="uploadMappingInput" rows="2" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white text-xs font-mono" placeholder='{"my_cost": "total_spend", "user_id": "anonymous_visitor_id"}'></textarea>
+                </div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-2">
+                <button onclick="closeUploadModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded text-xs font-semibold">Cancel</button>
+                <button onclick="submitUpload()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded text-xs font-semibold">Upload & Validate</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN JAVASCRIPT LOGIC -->
+    <script>
+        // Global State
+        let currentModel = 'position_based';
+        let currentSegment = '';
+        let funnelChartInstance = null;
+        let channelChartInstance = null;
+        let attributionChartInstance = null;
+        let latestSimulationResult = null;
+
+        // On Page Load
+        document.addEventListener('DOMContentLoaded', async () => {
+            lucide.createIcons();
+            await checkSystemStatus();
+            await loadAllDashboardData();
+        });
+
+        // Tab Navigation
+        function switchTab(tabId) {
+            document.querySelectorAll('.page-view').forEach(p => p.classList.add('hidden'));
+            document.querySelectorAll('.nav-tab').forEach(t => {
+                t.classList.remove('border-indigo-500', 'text-indigo-400');
+                t.classList.add('border-transparent', 'text-slate-400');
+            });
+
+            const activePage = document.getElementById(`page-${tabId}`);
+            const activeTab = document.getElementById(`tab-${tabId}`);
+            if (activePage) activePage.classList.remove('hidden');
+            if (activeTab) {
+                activeTab.classList.remove('border-transparent', 'text-slate-400');
+                activeTab.classList.add('border-indigo-500', 'text-indigo-400');
+            }
+
+            // Trigger specific page renders if needed
+            if (tabId === 'attribution') renderAttributionComparison();
+            if (tabId === 'simulator' && !latestSimulationResult) runBudgetSimulation();
+            if (tabId === 'governance') loadGovernanceData();
+        }
+
+        // Global Filter Changes
+        async function onGlobalModelChange(newModel) {
+            currentModel = newModel;
+            await loadAllDashboardData();
+        }
+
+        async function onGlobalFilterChange() {
+            currentSegment = document.getElementById('globalSegmentSelect').value;
+            await loadAllDashboardData();
+        }
+
+        // API Status Check
+        async function checkSystemStatus() {
+            try {
+                const res = await fetch('/api/status');
+                const data = await res.json();
+                
+                // Update dropdown value
+                if (data.active_profile_id) {
+                    const sel = document.getElementById('globalDatasetSelect');
+                    if (sel) sel.value = data.active_profile_id;
+                    const pSel = document.getElementById('provDatasetDropdown');
+                    if (pSel) pSel.value = data.active_profile_id;
+                }
+
+                // Update category badge
+                const badge = document.getElementById('datasetCategoryBadge');
+                if (badge) {
+                    badge.innerText = data.category || (data.is_synthetic ? 'SYNTHETIC' : 'PUBLIC DATASET');
+                    if (data.category === 'SYNTHETIC') badge.className = 'text-[9px] font-bold px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 border border-purple-500/40';
+                    else if (data.category === 'PUBLIC_OBFUSCATED') badge.className = 'text-[9px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/40';
+                    else badge.className = 'text-[9px] font-bold px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40';
+                }
+
+                // Update banner
+                const banner = document.getElementById('syntheticBanner');
+                if (data.is_synthetic) {
+                    banner.className = 'bg-gradient-to-r from-amber-600 to-amber-700 text-white text-xs font-semibold py-1.5 px-4 text-center tracking-wide flex items-center justify-center space-x-2 shadow-md';
+                    document.getElementById('bannerText').innerText = data.synthetic_banner_text || 'SYNTHETIC DEMO DATA — Illustrative 12-Month Multi-Touch B2B SaaS Benchmark';
+                } else {
+                    banner.className = 'bg-gradient-to-r from-blue-700 to-indigo-800 text-white text-xs font-semibold py-1.5 px-4 text-center tracking-wide flex items-center justify-center space-x-2 shadow-md';
+                    document.getElementById('bannerText').innerText = `PUBLIC REAL DATASET — ${data.active_profile_name || 'Public Data'} (${data.license || ''}) • Date Range: ${data.date_range || ''}`;
+                }
+
+                // Populate Provenance Card
+                if (document.getElementById('provDatasetName')) {
+                    document.getElementById('provDatasetName').innerText = data.active_profile_name || 'Active Dataset';
+                    document.getElementById('provCategoryBadge').innerText = data.category || 'DATASET';
+                    document.getElementById('provDateRange').innerText = data.date_range || 'Variable';
+                    document.getElementById('provLicense').innerText = data.license || 'Open Source';
+                    const sLink = document.getElementById('provSourceUrl');
+                    if (sLink) {
+                        sLink.href = data.source_url || '#';
+                        sLink.innerText = (data.source_url && data.source_url.startsWith('http')) ? new URL(data.source_url).hostname : data.source_url;
+                    }
+                    document.getElementById('provDescriptionText').innerText = data.provenance || '';
+
+                    // Supported metrics tags
+                    const suppCont = document.getElementById('provSupportedMetricsTags');
+                    if (suppCont) {
+                        suppCont.innerHTML = (data.available_metrics || []).map(m => 
+                            `<span class="px-2 py-0.5 rounded text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">${m}</span>`
+                        ).join('');
+                    }
+
+                    // Unavailable metrics tags
+                    const unsuppCont = document.getElementById('provUnavailableMetricsTags');
+                    if (unsuppCont) {
+                        if (data.unavailable_metrics && data.unavailable_metrics.length > 0) {
+                            unsuppCont.innerHTML = data.unavailable_metrics.map(u => 
+                                `<span class="px-2 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30 font-mono">${u}</span>`
+                            ).join('');
+                        } else {
+                            unsuppCont.innerHTML = `<span class="px-2 py-0.5 rounded text-[10px] bg-slate-800 text-slate-400">All Core Pipeline Metrics Supported</span>`;
+                        }
+                    }
+                }
+
+            } catch (err) {
+                console.error('Failed to fetch status:', err);
+            }
+        }
+
+        async function onGlobalDatasetChange(profileId) {
+            try {
+                const res = await fetch('/api/data/select-profile', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ profile_id: profileId })
+                });
+                const data = await res.json();
+                if (data.status === 'SUCCESS') {
+                    await checkSystemStatus();
+                    await loadAllDashboardData();
+                    const activeTab = document.querySelector('.nav-tab.active-tab');
+                    if (activeTab && activeTab.id === 'tab-attribution') renderAttributionComparison();
+                    if (activeTab && activeTab.id === 'tab-simulator') runBudgetSimulation();
+                    if (activeTab && activeTab.id === 'tab-governance') loadGovernanceData();
+                } else {
+                    alert('Dataset switch failed: ' + (data.message || 'Error'));
+                }
+            } catch (err) {
+                alert('Failed to switch dataset: ' + err.message);
+            }
+        }
+
+        // Master Data Loader
+        async function loadAllDashboardData() {
+            await Promise.all([
+                loadFunnelSummary(),
+                loadCampaignEconomics(),
+                loadLeakages(),
+                loadJourneyPaths(),
+                loadVelocitiesAndCohorts()
+            ]);
+            lucide.createIcons();
+        }
+
+        // 1. Funnel Summary & Overview
+        async function loadFunnelSummary() {
+            try {
+                let url = `/api/funnel/summary?`;
+                if (currentSegment) url += `segment=${encodeURIComponent(currentSegment)}`;
+                const res = await fetch(url);
+                const data = await res.json();
+                const currSym = data.currency_symbol || '$';
+
+                // Populate Overview KPIs
+                if (data.spend_unavailable || data.total_spend === 0) {
+                    document.getElementById('kpi-spend').innerText = 'Unavailable';
+                    document.getElementById('kpi-cpl').innerText = 'Ad spend not recorded';
+                } else {
+                    document.getElementById('kpi-spend').innerText = `${currSym}${(data.total_spend || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                }
+                
+                const leadsStage = data.stages.find(s => ['leads', 'add_to_cart', 'addtocart', 'orders_placed'].includes(s.id)) || {};
+                const mqlStage = data.stages.find(s => ['mqls', 'item_views', 'active_customers'].includes(s.id)) || {};
+                const sqlStage = data.stages.find(s => ['sqls', 'begin_checkout', 'fulfilled_orders'].includes(s.id)) || {};
+                const wonStage = data.stages.find(s => ['closed_won', 'purchase', 'transactions', 'fulfilled_orders'].includes(s.id)) || {};
+
+                document.getElementById('kpi-leads').innerText = (leadsStage.count || 0).toLocaleString();
+                if (!data.spend_unavailable && data.total_spend > 0) {
+                    document.getElementById('kpi-cpl').innerText = `CPL: ${currSym}${(data.total_spend / (leadsStage.count || 1)).toFixed(2)}`;
+                } else {
+                    document.getElementById('kpi-cpl').innerText = 'CPL: N/A';
+                }
+                
+                document.getElementById('kpi-sqls').innerText = (sqlStage.count || 0).toLocaleString();
+                const sqlRate = mqlStage.count > 0 ? ((sqlStage.count / mqlStage.count) * 100).toFixed(1) : '0.0';
+                document.getElementById('kpi-sql-rate').innerText = `${sqlRate}% Progression`;
+
+                document.getElementById('kpi-customers').innerText = (wonStage.count || 0).toLocaleString();
+                if (data.blended_cac != null && data.blended_cac > 0) {
+                    document.getElementById('kpi-cac').innerText = `CAC: ${currSym}${data.blended_cac.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                } else {
+                    document.getElementById('kpi-cac').innerText = 'CAC: N/A';
+                }
+
+                if (data.revenue_unavailable) {
+                    document.getElementById('kpi-revenue').innerText = 'Unavailable';
+                    document.getElementById('kpi-roas').innerText = 'ROAS: N/A';
+                } else {
+                    document.getElementById('kpi-revenue').innerText = `${currSym}${(data.total_realized_revenue || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    const roas = (!data.spend_unavailable && data.total_spend > 0) ? (data.total_realized_revenue / data.total_spend).toFixed(2) : 'N/A';
+                    document.getElementById('kpi-roas').innerText = roas !== 'N/A' ? `ROAS: ${roas}x` : 'ROAS: N/A';
+                }
+
+                if (data.margin_unavailable) {
+                    document.getElementById('kpi-margin').innerText = 'Unavailable';
+                    document.getElementById('kpi-margin-rate').innerText = 'COGS not recorded';
+                } else {
+                    document.getElementById('kpi-margin').innerText = `${currSym}${(data.total_contribution_margin || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    const marginPct = data.total_realized_revenue > 0 ? ((data.total_contribution_margin / data.total_realized_revenue) * 100).toFixed(1) : '0.0';
+                    document.getElementById('kpi-margin-rate').innerText = `Margin: ${marginPct}%`;
+                }
+
+                // Render Overview Funnel Chart
+                renderOverviewFunnelChart(data.stages);
+
+                // Render 11-Stage Funnel Table on Page 3
+                renderFunnelTable(data.stages);
+                document.getElementById('funnelLeadToCustomerRate').innerText = `${((data.overall_lead_to_customer_rate || 0) * 100).toFixed(2)}%`;
+
+            } catch (err) {
+                console.error('Failed to load funnel summary:', err);
+            }
+        }
+
+        // Render Overview Funnel Chart
+        function renderOverviewFunnelChart(stages) {
+            const ctx = document.getElementById('overviewFunnelChart');
+            if (!ctx) return;
+
+            // Only take the first 9 volume stages for the funnel visualization
+            const volumeStages = stages.filter(s => !s.is_currency && !s.is_unavailable);
+            const labels = volumeStages.map(s => s.name);
+            const counts = volumeStages.map(s => s.count);
+
+            if (funnelChartInstance) funnelChartInstance.destroy();
+
+            funnelChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Funnel Entity Volume',
+                        data: counts,
+                        backgroundColor: [
+                            'rgba(99, 102, 241, 0.4)',
+                            'rgba(99, 102, 241, 0.5)',
+                            'rgba(99, 102, 241, 0.6)',
+                            'rgba(59, 130, 246, 0.7)',
+                            'rgba(14, 165, 233, 0.8)',
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(249, 115, 22, 0.8)',
+                            'rgba(168, 85, 247, 0.9)'
+                        ],
+                        borderColor: '#6366f1',
+                        borderWidth: 1,
+                        borderRadius: 4
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            type: 'logarithmic',
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: { color: '#94a3b8', font: { size: 10 } }
+                        },
+                        y: {
+                            grid: { display: false },
+                            ticks: { color: '#cbd5e1', font: { size: 10 } }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (context) => `Volume: ${context.raw.toLocaleString()}`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render Funnel Table Body with Denominator Definitions
+        function renderFunnelTable(stages) {
+            const tbody = document.getElementById('funnelStagesTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const defaultCurr = (stages.find(s => s.currency_symbol) || {}).currency_symbol || '$';
+
+            stages.forEach((s, idx) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition-colors';
+
+                const stageCurr = s.currency_symbol || defaultCurr;
+                const formattedVal = s.is_unavailable ? 'Unavailable' : (s.is_currency ? `${stageCurr}${(s.count || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : s.count.toLocaleString());
+                const convText = s.is_unavailable ? '-' : (idx === 0 ? '100.0%' : (s.is_currency ? (s.id.includes('revenue') || s.id.includes('billings') || s.id.includes('margin') ? `${stageCurr}${(s.conversion_rate_from_prev || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} / unit` : `${(s.conversion_rate_from_prev * 100).toFixed(1)}%`) : `${s.conversion_pct}%`));
+                const dropCountText = (s.is_currency || s.is_unavailable) ? '-' : s.drop_off_count.toLocaleString();
+                const dropPctText = (s.is_currency || s.is_unavailable) ? '-' : `${s.drop_off_pct}%`;
+
+                let statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">Normal</span>';
+                if (s.is_unavailable) {
+                    statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-amber-300 border border-amber-500/30">Unavailable</span>';
+                } else if (!s.is_currency && s.drop_off_pct > 70 && idx > 2) {
+                    statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-500/20 text-rose-400">High Leakage</span>';
+                }
+
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3">
+                        <div class="font-medium text-white">${s.name}</div>
+                        ${s.denominator_definition ? `<div class="text-[10px] text-slate-400 font-mono mt-0.5">${s.denominator_definition}</div>` : ''}
+                    </td>
+                    <td class="py-2.5 px-3 text-slate-400">${s.entity_type}</td>
+                    <td class="py-2.5 px-3 text-right font-bold ${s.is_unavailable ? 'text-amber-400 italic' : 'text-slate-200'}">${formattedVal}</td>
+                    <td class="py-2.5 px-3 text-right font-semibold text-indigo-300">${convText}</td>
+                    <td class="py-2.5 px-3 text-right text-rose-400">${dropCountText}</td>
+                    <td class="py-2.5 px-3 text-right text-rose-400">${dropPctText}</td>
+                    <td class="py-2.5 px-3 text-center">${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 2. Campaign Economics & Overview Channel Chart
+        async function loadCampaignEconomics() {
+            try {
+                const res = await fetch(`/api/economics/campaigns?model=${currentModel}`);
+                const data = await res.json();
+                const camps = data.campaigns || [];
+
+                // Render Overview Channel Chart
+                renderOverviewChannelChart(camps);
+
+                // Render Campaign Table on Page 5
+                renderCampaignEconomicsTable(camps);
+
+                // Load Financials
+                const finRes = await fetch('/api/economics/financials');
+                const fin = await finRes.json();
+                document.getElementById('fin-booked').innerText = `$${(fin.booked_contract_value || 0).toLocaleString()}`;
+                document.getElementById('fin-discounts').innerText = `-$${(fin.discounts_applied || 0).toLocaleString()}`;
+                document.getElementById('fin-refunds').innerText = `-$${(fin.refunds_and_cancellations || 0).toLocaleString()}`;
+                document.getElementById('fin-realized').innerText = `$${(fin.realized_revenue || 0).toLocaleString()}`;
+                document.getElementById('fin-delivery').innerText = `-$${(fin.variable_service_costs || 0).toLocaleString()}`;
+                document.getElementById('fin-margin').innerText = `$${(fin.net_contribution_margin || 0).toLocaleString()}`;
+
+            } catch (err) {
+                console.error('Failed to load economics:', err);
+            }
+        }
+
+        // Render Overview Channel Chart
+        function renderOverviewChannelChart(campaigns) {
+            const ctx = document.getElementById('overviewChannelChart');
+            if (!ctx) return;
+
+            // Aggregate by channel
+            const chMap = {};
+            campaigns.forEach(c => {
+                if (!chMap[c.channel]) chMap[c.channel] = { spend: 0, revenue: 0 };
+                chMap[c.channel].spend += c.spend;
+                chMap[c.channel].revenue += c.attributed_realized_revenue;
+            });
+
+            const labels = Object.keys(chMap);
+            const spends = labels.map(l => chMap[l].spend);
+            const revs = labels.map(l => chMap[l].revenue);
+
+            if (channelChartInstance) channelChartInstance.destroy();
+
+            channelChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Attributed Revenue ($)',
+                            data: revs,
+                            backgroundColor: 'rgba(16, 185, 129, 0.75)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Marketing Spend ($)',
+                            data: spends,
+                            backgroundColor: 'rgba(99, 102, 241, 0.65)',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 9.5 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 10 },
+                                callback: (v) => `$${(v/1000).toFixed(0)}k`
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#cbd5e1', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        // Render Campaign Economics Table Body
+        function renderCampaignEconomicsTable(campaigns) {
+            const tbody = document.getElementById('campaignEconomicsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            campaigns.forEach(c => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition-colors';
+
+                let tierBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">Star Performer</span>';
+                if (c.efficiency_tier === 'Budget Sink') {
+                    tierBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-500/20 text-rose-400">Budget Sink</span>';
+                } else if (c.efficiency_tier === 'Efficient Feeder') {
+                    tierBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300">Efficient Feeder</span>';
+                } else if (c.efficiency_tier === 'Marginal / Brand Assist') {
+                    tierBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300">Brand Assist</span>';
+                }
+
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-semibold text-white">${c.campaign_name}</td>
+                    <td class="py-2.5 px-3 text-slate-400">${c.channel}</td>
+                    <td class="py-2.5 px-3 text-right text-slate-200">$${c.spend.toLocaleString()}</td>
+                    <td class="py-2.5 px-3 text-right font-medium text-slate-300">${c.leads.toLocaleString()}</td>
+                    <td class="py-2.5 px-3 text-right font-medium ${(c.mql_rate < 0.3) ? 'text-rose-400 font-bold' : 'text-slate-300'}">${(c.mql_rate * 100).toFixed(1)}%</td>
+                    <td class="py-2.5 px-3 text-right font-semibold text-indigo-300">${(c.attributed_customer_equivalents || c.attributed_customers || 0).toFixed(2)}</td>
+                    <td class="py-2.5 px-3 text-right text-slate-200">$${c.cac.toLocaleString()}</td>
+                    <td class="py-2.5 px-3 text-right font-bold text-emerald-400">$${c.attributed_realized_revenue.toLocaleString()}</td>
+                    <td class="py-2.5 px-3 text-right font-semibold text-purple-300">$${c.attributed_contribution_margin.toLocaleString()}</td>
+                    <td class="py-2.5 px-3 text-right font-bold ${(c.roas >= 3) ? 'text-emerald-400' : ((c.roas < 1) ? 'text-rose-400' : 'text-slate-200')}">${c.roas}x</td>
+                    <td class="py-2.5 px-3 text-center">${tierBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function filterCampaignTable() {
+            const query = document.getElementById('campaignSearchInput').value.toLowerCase();
+            const rows = document.querySelectorAll('#campaignEconomicsTableBody tr');
+            rows.forEach(r => {
+                const text = r.innerText.toLowerCase();
+                r.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+
+        // 3. Funnel Leakages & Diagnostics
+        async function loadLeakages() {
+            try {
+                const res = await fetch('/api/leakage/issues');
+                const data = await res.json();
+                const issues = data.issues || [];
+                const currSym = data.currency_symbol || '$';
+
+                // Top Leak Banner on Overview
+                if (issues.length > 0) {
+                    const top = issues[0];
+                    document.getElementById('overviewLeakTitle').innerText = top.title;
+                    const lossText = top.estimated_financial_loss > 0 ? `${currSym}${top.estimated_financial_loss.toLocaleString()} estimated financial loss.` : `${top.observed_metric}.`;
+                    document.getElementById('overviewLeakDesc').innerText = `${top.funnel_stage}: ${lossText}`;
+                    document.getElementById('overviewLeakSeverity').innerText = top.severity;
+                }
+
+                document.getElementById('diagTotalDrag').innerText = `${currSym}${(data.total_estimated_commercial_drag || 0).toLocaleString(undefined, {minimumFractionDigits: 2})}`;
+
+                // Render Diagnostics Page 6 Cards
+                const container = document.getElementById('diagnosticsIssuesContainer');
+                container.innerHTML = '';
+
+                issues.forEach((iss, idx) => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-3';
+
+                    const sevColor = iss.severity === 'CRITICAL' ? 'bg-rose-500/20 text-rose-400 border-rose-500/30' : (iss.severity === 'HIGH' ? 'bg-amber-500/20 text-amber-300 border-amber-500/30' : 'bg-blue-500/20 text-blue-300 border-blue-500/30');
+
+                    card.innerHTML = `
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-800 pb-3">
+                            <div class="flex items-center space-x-2.5">
+                                <span class="px-2 py-0.5 text-[10px] font-bold rounded border ${sevColor}">${iss.severity}</span>
+                                <h4 class="text-sm font-bold text-white">${iss.title}</h4>
+                            </div>
+                            <div class="text-xs font-bold text-rose-400">
+                                Estimated Impact: ${currSym}${iss.estimated_financial_loss.toLocaleString()}
+                            </div>
+                        </div>
+
+                        <div class="bg-slate-950/80 p-2.5 rounded border border-slate-800 text-[11px]">
+                            <span class="text-emerald-400 font-bold uppercase text-[10px] tracking-wider">[MEASURED FACT]</span>
+                            <p class="text-slate-200 mt-0.5 font-mono">${iss.measured_fact || iss.observed_metric}</p>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                            <div><span class="text-slate-400">Funnel Stage:</span> <span class="text-indigo-300 font-medium">${iss.funnel_stage}</span></div>
+                            <div><span class="text-slate-400">Observed Metric:</span> <span class="text-white font-medium">${iss.observed_metric}</span></div>
+                            <div><span class="text-slate-400">Benchmark Baseline:</span> <span class="text-emerald-400 font-medium">${iss.benchmark_baseline}</span></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs pt-1">
+                            <div class="bg-slate-950/70 p-3 rounded-lg border border-slate-800/80">
+                                <span class="text-amber-300 font-semibold uppercase text-[10px] tracking-wider">[INFERRED HYPOTHESIS] Root Causes</span>
+                                <ul class="list-disc list-inside mt-1.5 space-y-1 text-slate-300">
+                                    ${(iss.plausible_hypotheses || []).map(h => `<li>${h}</li>`).join('')}
+                                </ul>
+                            </div>
+                            <div class="bg-indigo-950/30 p-3 rounded-lg border border-indigo-900/40">
+                                <span class="text-indigo-300 font-semibold uppercase text-[10px] tracking-wider">[RECOMMENDED ACTION] Remediation</span>
+                                <ul class="list-disc list-inside mt-1.5 space-y-1 text-slate-200">
+                                    ${(iss.recommended_actions || []).map(a => `<li>${a}</li>`).join('')}
+                                </ul>
+                            </div>
+                        </div>
+
+                        ${iss.supporting_metric ? `
+                        <div class="mt-2 p-3 bg-slate-950/70 rounded-lg border border-slate-800 text-[11px] space-y-2">
+                            <div class="text-[10px] uppercase font-bold tracking-wider text-indigo-400 flex items-center justify-between">
+                                <span class="flex items-center gap-1.5">
+                                    <i data-lucide="shield-check" class="w-3.5 h-3.5 text-indigo-400"></i>
+                                    Audited Recommendation Foundation
+                                </span>
+                                <span class="text-[9px] px-2 py-0.5 rounded bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono">VERIFIED DATA</span>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-[11px]">
+                                <div class="bg-slate-900/60 p-2 rounded border border-slate-800/80">
+                                    <span class="text-slate-400 font-semibold block text-[10px]">SUPPORTING METRIC</span>
+                                    <span class="text-slate-200 font-mono text-[11px]">${iss.supporting_metric}</span>
+                                </div>
+                                <div class="bg-slate-900/60 p-2 rounded border border-slate-800/80">
+                                    <span class="text-slate-400 font-semibold block text-[10px]">CALCULATION</span>
+                                    <span class="text-slate-300 font-mono text-[11px]">${iss.calculation}</span>
+                                </div>
+                                <div class="bg-slate-900/60 p-2 rounded border border-slate-800/80">
+                                    <span class="text-amber-400 font-semibold block text-[10px]">ASSUMPTION</span>
+                                    <span class="text-amber-200/90 text-[11px]">${iss.assumption}</span>
+                                </div>
+                                <div class="bg-slate-900/60 p-2 rounded border border-slate-800/80">
+                                    <span class="text-rose-400 font-semibold block text-[10px]">UNCERTAINTY & SENSITIVITY</span>
+                                    <span class="text-rose-200/90 text-[11px]">${iss.uncertainty}</span>
+                                </div>
+                            </div>
+                            <div class="pt-1.5 border-t border-slate-800/80 flex items-start gap-1.5">
+                                <span class="text-emerald-400 font-semibold shrink-0">Suggested Next Action:</span>
+                                <span class="text-slate-200">${iss.suggested_next_action}</span>
+                            </div>
+                        </div>
+                        ` : ''}
+
+                        <div class="text-[11px] text-slate-400 flex items-center justify-between pt-1">
+                            <span>Confidence: <strong class="text-slate-300">${iss.confidence_level}</strong></span>
+                            <span>Limitation: ${iss.evidence_limitations}</span>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+
+            } catch (err) {
+                console.error('Failed to load leakages:', err);
+            }
+        }
+
+        // 4. Velocities & Cohorts
+        async function loadVelocitiesAndCohorts() {
+            try {
+                const velRes = await fetch('/api/funnel/velocities');
+                const vel = await velRes.json();
+                
+                if (vel.sales_cycle_days) {
+                    document.getElementById('velocityCycleMedian').innerText = `${vel.sales_cycle_days.median} Days`;
+                    document.getElementById('velocityCycleP90').innerText = `90th %ile: ${vel.sales_cycle_days.p90} Days`;
+                    
+                    const segContainer = document.getElementById('velocitySegmentList');
+                    if (segContainer && vel.sales_cycle_days.by_segment) {
+                        segContainer.innerHTML = Object.entries(vel.sales_cycle_days.by_segment)
+                            .map(([seg, days]) => `<div class="flex justify-between text-xs"><span class="text-slate-300">${seg}:</span> <span class="font-bold text-white">${days} days</span></div>`)
+                            .join('');
+                    }
+                }
+
+                if (vel.lead_to_first_outreach_hours) {
+                    document.getElementById('velocitySdrMedian').innerText = `${vel.lead_to_first_outreach_hours.median} Hrs`;
+                    document.getElementById('velocitySdrP90').innerText = `90th %ile: ${vel.lead_to_first_outreach_hours.p90} Hrs`;
+                }
+
+                const cohRes = await fetch('/api/funnel/cohorts');
+                const cohorts = await cohRes.json();
+                const cohTbody = document.getElementById('cohortTableBody');
+                if (cohTbody) {
+                    cohTbody.innerHTML = '';
+                    cohorts.forEach(c => {
+                        const tr = document.createElement('tr');
+                        const statusBadge = c.is_immature 
+                            ? '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500/20 text-amber-300">In-Flight (Immature)</span>'
+                            : '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">Matured</span>';
+
+                        tr.innerHTML = `
+                            <td class="py-2 px-2 font-mono text-white">${c.cohort_month}</td>
+                            <td class="py-2 px-2 text-right text-slate-300">${c.total_opportunities}</td>
+                            <td class="py-2 px-2 text-right text-emerald-400 font-bold">${c.won_deals}</td>
+                            <td class="py-2 px-2 text-right font-medium text-slate-200">${c.realized_win_rate_pct}%</td>
+                            <td class="py-2 px-2 text-center">${statusBadge}</td>
+                        `;
+                        cohTbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error('Failed to load velocities:', err);
+            }
+        }
+
+        // 5. Journey Explorer & Paths
+        async function loadJourneyPaths() {
+            try {
+                const res = await fetch('/api/journey/paths?top_n=6');
+                const data = await res.json();
+                
+                const convList = document.getElementById('convertingPathsList');
+                if (convList) {
+                    convList.innerHTML = (data.converting_paths || []).map(p => `
+                        <div class="p-2.5 bg-slate-900 rounded border border-slate-800 flex items-center justify-between">
+                            <span class="font-mono text-slate-200">${p.path}</span>
+                            <span class="font-bold text-emerald-400 text-xs">${p.count} deals (${p.share_pct}%)</span>
+                        </div>
+                    `).join('');
+                }
+
+                const nonConvList = document.getElementById('nonConvertingPathsList');
+                if (nonConvList) {
+                    nonConvList.innerHTML = (data.non_converting_paths || []).map(p => `
+                        <div class="p-2.5 bg-slate-900 rounded border border-slate-800 flex items-center justify-between">
+                            <span class="font-mono text-slate-400">${p.path}</span>
+                            <span class="font-bold text-rose-400 text-xs">${p.count} visitors (${p.share_pct}%)</span>
+                        </div>
+                    `).join('');
+                }
+            } catch (err) {
+                console.error('Failed to load journey paths:', err);
+            }
+        }
+
+        async function quickLoadJourney(id) {
+            if (!id) return;
+            document.getElementById('journeySearchInput').value = id;
+            await searchJourney();
+        }
+
+        async function searchJourney() {
+            const query = document.getElementById('journeySearchInput').value.trim();
+            if (!query) return;
+
+            try {
+                const res = await fetch(`/api/journey/search?identifier=${encodeURIComponent(query)}`);
+                if (!res.ok) {
+                    alert('No journey found for that identifier.');
+                    return;
+                }
+                const data = await res.json();
+                renderJourneyDetail(data);
+            } catch (err) {
+                alert('Journey lookup failed: ' + err.message);
+            }
+        }
+
+        function renderJourneyDetail(data) {
+            const banner = document.getElementById('journeyProfileBanner');
+            banner.classList.remove('hidden');
+
+            document.getElementById('jp-lead-id').innerText = data.lead_id || 'Pre-Lead Visitor';
+            document.getElementById('jp-anon-id').innerText = data.anonymous_visitor_id;
+            document.getElementById('jp-segment').innerText = data.lead_profile ? data.lead_profile.customer_segment : 'Unknown';
+            document.getElementById('jp-touches').innerText = `${data.total_touchpoints} touches over ${data.journey_duration_days} days`;
+            document.getElementById('jp-score').innerText = data.lead_profile ? `${data.lead_profile.lead_score} / 100` : 'N/A';
+            document.getElementById('jp-rep').innerText = data.lead_profile ? data.lead_profile.sales_rep : 'Unassigned';
+            document.getElementById('jp-delay').innerText = data.lead_profile ? `${data.lead_profile.follow_up_delay_hours} hrs` : 'N/A';
+            
+            let outcomeText = 'Active Inbound';
+            if (data.revenue_profile) outcomeText = `Closed Won ($${data.revenue_profile.realized_revenue.toLocaleString()})`;
+            else if (data.opportunity_profile) outcomeText = `Opportunity: ${data.opportunity_profile.stage}`;
+            else if (data.lead_profile) outcomeText = `Lead: ${data.lead_profile.qualification_status.toUpperCase()}`;
+            document.getElementById('jp-outcome').innerText = outcomeText;
+
+            // Render Timeline Nodes
+            const container = document.getElementById('journeyTimelineContainer');
+            container.innerHTML = '';
+
+            const touches = data.touchpoints || [];
+            touches.forEach((t, i) => {
+                const node = document.createElement('div');
+                node.className = 'flex items-start space-x-3.5 relative pb-4';
+
+                let iconName = 'mouse-pointer';
+                if (t.event_type === 'form_submission') iconName = 'file-check';
+                else if (t.event_type === 'ad_exposure') iconName = 'eye';
+
+                node.innerHTML = `
+                    <div class="flex flex-col items-center">
+                        <div class="w-8 h-8 rounded-full bg-indigo-600/30 border border-indigo-500/60 flex items-center justify-center text-indigo-400 font-bold text-xs shrink-0">
+                            ${t.sequence_index}
+                        </div>
+                        ${i < touches.length - 1 ? '<div class="w-0.5 h-12 bg-slate-800 my-1"></div>' : ''}
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs flex-1 space-y-1">
+                        <div class="flex items-center justify-between">
+                            <span class="font-bold text-white text-sm">${t.channel} — ${t.campaign_name}</span>
+                            <span class="text-slate-400 text-[11px] font-mono">${t.timestamp}</span>
+                        </div>
+                        <div class="text-slate-300">
+                            <span>Event: <strong class="text-indigo-300 font-mono">${t.event_type}</strong></span>
+                            <span class="mx-2">•</span>
+                            <span>Medium: ${t.medium}</span>
+                            <span class="mx-2">•</span>
+                            <span>Consent: <span class="text-emerald-400 font-medium">${t.consent_status}</span></span>
+                        </div>
+                        <div class="text-slate-400 text-[11px] font-mono truncate">
+                            URL: ${t.landing_page}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(node);
+            });
+            lucide.createIcons();
+        }
+
+        // 6. Attribution Model Comparison
+        async function renderAttributionComparison() {
+            try {
+                const res = await fetch('/api/attribution/compare');
+                const data = await res.json();
+                
+                const banner = document.getElementById('attributionAuditBanner');
+                const bannerText = document.getElementById('attrReconciliationText');
+                const tbody = document.getElementById('attributionMatrixTableBody');
+                tbody.innerHTML = '';
+
+                if (data.status === 'METRIC_UNAVAILABLE') {
+                    if (banner) {
+                        banner.className = 'p-3 bg-amber-950/40 border border-amber-800/60 rounded-lg flex items-center justify-between text-xs text-amber-300 mb-4';
+                        bannerText.innerHTML = `<strong>⚠️ METRIC UNAVAILABLE:</strong> ${data.reason}`;
+                    }
+                    if (attributionChartInstance) {
+                        attributionChartInstance.destroy();
+                        attributionChartInstance = null;
+                    }
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" class="p-8 text-center text-slate-400">
+                                <div class="max-w-lg mx-auto space-y-2">
+                                    <div class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-2">
+                                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                                    </div>
+                                    <div class="text-sm font-bold text-white">Multi-Touch Attribution Not Available for Selected Dataset</div>
+                                    <p class="text-xs text-slate-300 leading-relaxed">${data.reason}</p>
+                                    <p class="text-[11px] text-slate-400">Active Profile: <strong class="text-slate-200">${data.dataset_name || 'Public Dataset'}</strong></p>
+                                    <div class="pt-3">
+                                        <button onclick="onGlobalDatasetChange('synthetic_b2b')" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow">
+                                            Switch to Synthetic B2B SaaS Benchmark to Compare 6 Models
+                                        </button>
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                    lucide.createIcons();
+                    return;
+                }
+
+                // Restore banner styling for active attribution
+                if (banner) {
+                    banner.className = 'p-3 bg-emerald-950/40 border border-emerald-800/60 rounded-lg flex items-center justify-between text-xs text-emerald-300 mb-4';
+                    bannerText.innerHTML = `Reconciliation: 100% of realized revenue allocated. Touchpoint weights sum to 1.0 per converted journey. Conversions represent Attributed Customer Equivalents.`;
+                }
+
+                const matrix = data.comparison_matrix || [];
+                const labels = [];
+                const ftRevs = [];
+                const ltRevs = [];
+                const posRevs = [];
+
+                matrix.slice(0, 10).forEach(m => {
+                    labels.push(m.campaign_name.substring(0, 24));
+                    ftRevs.push(m.models.first_touch.revenue);
+                    ltRevs.push(m.models.last_touch.revenue);
+                    posRevs.push(m.models.position_based.revenue);
+
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/40 transition-colors';
+                    const spendDisplay = m.spend > 0 ? `$${m.spend.toLocaleString()}` : '<span class="text-slate-500 italic">No Spend Data</span>';
+                    tr.innerHTML = `
+                        <td class="py-2.5 px-3 font-semibold text-white">${m.campaign_name}</td>
+                        <td class="py-2.5 px-3 text-slate-400">${m.channel}</td>
+                        <td class="py-2.5 px-3 text-right text-slate-200">${spendDisplay}</td>
+                        <td class="py-2.5 px-3 text-right font-medium text-slate-300">$${m.models.first_touch.revenue.toLocaleString()}</td>
+                        <td class="py-2.5 px-3 text-right font-medium text-slate-300">$${m.models.last_touch.revenue.toLocaleString()}</td>
+                        <td class="py-2.5 px-3 text-right font-medium text-slate-300">$${m.models.linear.revenue.toLocaleString()}</td>
+                        <td class="py-2.5 px-3 text-right font-bold text-indigo-400">$${m.models.position_based.revenue.toLocaleString()}</td>
+                        <td class="py-2.5 px-3 text-right font-medium text-slate-300">$${m.models.time_decay.revenue.toLocaleString()}</td>
+                        <td class="py-2.5 px-3 text-center">
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-indigo-300 border border-slate-700">${m.role_classification}</span>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+
+                // Render Attribution Comparison Chart
+                renderAttributionChart(labels, ftRevs, ltRevs, posRevs);
+                lucide.createIcons();
+
+            } catch (err) {
+                console.error('Failed to load attribution comparison:', err);
+            }
+        }
+
+        function renderAttributionChart(labels, ftRevs, ltRevs, posRevs) {
+            const ctx = document.getElementById('attributionComparisonChart');
+            if (!ctx) return;
+
+            if (attributionChartInstance) attributionChartInstance.destroy();
+
+            attributionChartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'First-Touch Revenue ($)',
+                            data: ftRevs,
+                            backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Position-Based Revenue ($)',
+                            data: posRevs,
+                            backgroundColor: 'rgba(99, 102, 241, 0.85)',
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Last-Touch Revenue ($)',
+                            data: ltRevs,
+                            backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#94a3b8', font: { size: 9.5 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(51, 65, 85, 0.3)' },
+                            ticks: {
+                                color: '#94a3b8',
+                                font: { size: 10 },
+                                callback: (v) => `$${(v/1000).toFixed(0)}k`
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                            labels: { color: '#cbd5e1', font: { size: 10 } }
+                        }
+                    }
+                }
+            });
+        }
+
+        async function recalculateCustomAttribution() {
+            const wFirst = parseFloat(document.getElementById('wFirstInput').value);
+            const wMid = parseFloat(document.getElementById('wMidInput').value);
+            const wLast = parseFloat(document.getElementById('wLastInput').value);
+            
+            try {
+                const res = await fetch(`/api/attribution/calculate?model=position_based&w_first=${wFirst}&w_mid=${wMid}&w_last=${wLast}`);
+                const data = await res.json();
+                document.getElementById('attrReconciliationText').innerText = `Reconciled: Total distributed revenue $${data.reconciliation.total_attributed_revenue.toLocaleString()} equals eligible revenue pool.`;
+                await renderAttributionComparison();
+            } catch (err) {
+                alert('Attribution calculation failed: ' + err.message);
+            }
+        }
+
+        // 7. Budget Optimization Simulator
+        function updateSliderValue(sliderId, labelId, prefixOrSuffix, multiplier = 1) {
+            const val = parseFloat(document.getElementById(sliderId).value) * multiplier;
+            if (prefixOrSuffix === '$') {
+                document.getElementById(labelId).innerText = `$${val.toLocaleString()}`;
+            } else {
+                document.getElementById(labelId).innerText = `±${val.toFixed(0)}%`;
+            }
+        }
+
+        async function runBudgetSimulation() {
+            const budget = parseFloat(document.getElementById('sliderBudget').value);
+            const shift = parseFloat(document.getElementById('sliderShift').value);
+            const floor = parseFloat(document.getElementById('sliderFloor').value);
+            const boost = parseFloat(document.getElementById('sliderBoost').value);
+
+            try {
+                const res = await fetch('/api/optimization/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        total_budget: budget,
+                        max_shift_pct: shift,
+                        min_channel_floor_pct: floor,
+                        efficiency_boost_pct: boost
+                    })
+                });
+                const data = await res.json();
+                latestSimulationResult = data;
+                renderSimulationResults(data);
+            } catch (err) {
+                console.error('Simulation failed:', err);
+            }
+        }
+
+        function renderSimulationResults(data) {
+            const tbody = document.getElementById('reallocationTableBody');
+            tbody.innerHTML = '';
+
+            if (data.status === 'OPTIMIZATION_UNAVAILABLE') {
+                document.getElementById('scen-cons-rev').innerText = 'Unavailable';
+                document.getElementById('scen-cons-profit').innerText = 'Ad spend not recorded';
+                document.getElementById('scen-base-rev').innerText = 'Unavailable';
+                document.getElementById('scen-base-profit').innerText = 'Ad spend not recorded';
+                document.getElementById('scen-opt-rev').innerText = 'Unavailable';
+                document.getElementById('scen-opt-profit').innerText = 'Ad spend not recorded';
+
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="8" class="p-8 text-center text-slate-400">
+                            <div class="max-w-lg mx-auto space-y-2">
+                                <div class="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto mb-2">
+                                    <i data-lucide="sliders" class="w-5 h-5"></i>
+                                </div>
+                                <div class="text-sm font-bold text-white">Budget Reallocation Simulator Unavailable</div>
+                                <p class="text-xs text-slate-300 leading-relaxed">${data.reason}</p>
+                                <p class="text-[11px] text-slate-400">Active Profile: <strong class="text-slate-200">${data.dataset_name || 'Public Dataset'}</strong></p>
+                                <p class="text-[11px] text-slate-400">To simulate constrained SciPy SLSQP optimization with Hill diminishing returns curves, switch to a dataset with marketing cost data.</p>
+                                <div class="pt-3">
+                                    <button onclick="onGlobalDatasetChange('synthetic_b2b')" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold shadow">
+                                        Switch to Synthetic B2B SaaS Benchmark ($1.9M Spend)
+                                    </button>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            const sc = data.scenarios || {};
+            if (sc.conservative) {
+                document.getElementById('scen-cons-rev').innerText = `$${sc.conservative.projected_revenue.toLocaleString()}`;
+                document.getElementById('scen-cons-profit').innerText = `+$${sc.conservative.profit_delta.toLocaleString()} Net Margin Lift`;
+            }
+            if (sc.base) {
+                document.getElementById('scen-base-rev').innerText = `$${sc.base.projected_revenue.toLocaleString()}`;
+                document.getElementById('scen-base-profit').innerText = `+$${sc.base.profit_delta.toLocaleString()} Net Margin Lift`;
+            }
+            if (sc.optimistic) {
+                document.getElementById('scen-opt-rev').innerText = `$${sc.optimistic.projected_revenue.toLocaleString()}`;
+                document.getElementById('scen-opt-profit').innerText = `+$${sc.optimistic.profit_delta.toLocaleString()} Net Margin Lift`;
+            }
+
+            // Render Reallocation Table Body
+            const tbody = document.getElementById('reallocationTableBody');
+            tbody.innerHTML = '';
+
+            (data.channel_allocations || []).forEach(ch => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/40 transition-colors';
+
+                const deltaColor = ch.spend_delta > 0 ? 'text-emerald-400 font-bold' : (ch.spend_delta < 0 ? 'text-rose-400 font-bold' : 'text-slate-400');
+                const actionBadge = ch.action.includes('INCREASE') ? '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/20 text-emerald-400">+ Increase Spend</span>' : (ch.action.includes('DECREASE') ? '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-500/20 text-rose-400">- Reallocate Out</span>' : '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-slate-800 text-slate-300">Maintain</span>');
+
+                tr.innerHTML = `
+                    <td class="py-2.5 px-3 font-semibold text-white">${ch.channel}</td>
+                    <td class="py-2.5 px-3 text-right text-slate-300">$${ch.current_spend.toLocaleString()}</td>
+                    <td class="py-2.5 px-3 text-right font-bold text-indigo-300">$${ch.proposed_spend.toLocaleString()}</td>
+                    <td class="py-2.5 px-3 text-right ${deltaColor}">${ch.spend_delta > 0 ? '+' : ''}$${ch.spend_delta.toLocaleString()}</td>
+                    <td class="py-2.5 px-3 text-right ${deltaColor}">${ch.spend_delta_pct > 0 ? '+' : ''}${ch.spend_delta_pct}%</td>
+                    <td class="py-2.5 px-3 text-right font-medium text-slate-200">$${ch.projected_revenue.toLocaleString()}</td>
+                    <td class="py-2.5 px-3 text-right text-slate-300">$${ch.projected_cac.toLocaleString()}</td>
+                    <td class="py-2.5 px-3 text-center">${actionBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Approval Modal & Submission
+        function openApprovalModal() {
+            document.getElementById('approvalModal').classList.remove('hidden');
+        }
+        function closeApprovalModal() {
+            document.getElementById('approvalModal').classList.add('hidden');
+        }
+
+        async function submitApproval() {
+            if (!latestSimulationResult) return;
+            const userRole = document.getElementById('modalUserRole').value;
+            const scenName = document.getElementById('modalScenarioName').value;
+            const notes = document.getElementById('modalNotes').value;
+
+            try {
+                const res = await fetch('/api/optimization/approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_role: userRole,
+                        scenario_name: scenName,
+                        original_spend: latestSimulationResult.current_portfolio.total_spend,
+                        proposed_spend: latestSimulationResult.constraints_summary.total_budget,
+                        delta_summary: `Reallocated budget with ±${latestSimulationResult.constraints_summary.max_cycle_shift_pct}% shift limits`,
+                        projected_revenue: latestSimulationResult.scenarios.base.projected_revenue,
+                        notes: notes
+                    })
+                });
+                const resData = await res.json();
+                closeApprovalModal();
+                alert('Budget scenario approved and logged to audit store!');
+                loadGovernanceData();
+            } catch (err) {
+                alert('Approval failed: ' + err.message);
+            }
+        }
+
+        // 8. Grounded AI Advisor
+        async function askPreset(text) {
+            document.getElementById('advisorQueryInput').value = text;
+            await sendAdvisorQuery();
+        }
+
+        async function sendAdvisorQuery() {
+            const input = document.getElementById('advisorQueryInput');
+            const q = input.value.trim();
+            if (!q) return;
+
+            const container = document.getElementById('advisorChatContainer');
+
+            // Render user bubble
+            const userMsg = document.createElement('div');
+            userMsg.className = 'flex items-start justify-end space-x-2';
+            userMsg.innerHTML = `
+                <div class="bg-indigo-600 text-white rounded-lg p-3 text-xs max-w-xl">
+                    ${q}
+                </div>
+            `;
+            container.appendChild(userMsg);
+            input.value = '';
+            container.scrollTop = container.scrollHeight;
+
+            // Render Loading AI Bubble
+            const aiMsg = document.createElement('div');
+            aiMsg.className = 'flex items-start space-x-3';
+            aiMsg.innerHTML = `
+                <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0">
+                    <i data-lucide="bot" class="w-4 h-4"></i>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 max-w-2xl space-y-2">
+                    <p class="text-slate-400 animate-pulse">Consulting 8 analytical agents and reconciling metrics...</p>
+                </div>
+            `;
+            container.appendChild(aiMsg);
+            container.scrollTop = container.scrollHeight;
+            lucide.createIcons();
+
+            try {
+                const res = await fetch('/api/advisor/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query: q })
+                });
+                const data = await res.json();
+
+                let evidenceHtml = '';
+                if (data.grounded_evidence && data.grounded_evidence.length > 0) {
+                    evidenceHtml = `
+                        <div class="bg-slate-950 p-2.5 rounded border border-slate-800 space-y-1.5 text-[11px] mt-2">
+                            <span class="text-indigo-400 font-semibold uppercase text-[10px] tracking-wider">CITED EVIDENCE & METRICS</span>
+                            ${data.grounded_evidence.map(e => `
+                                <div class="text-slate-300">
+                                    <strong class="text-white">${e.metric || e.campaign || e.requirement || ''}:</strong> ${e.finding || e.description || e.value || JSON.stringify(e)}
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                }
+
+                aiMsg.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center text-white shrink-0">
+                        <i data-lucide="bot" class="w-4 h-4"></i>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 max-w-2xl space-y-2 shadow-sm">
+                        <p class="font-semibold text-white leading-relaxed">${data.summary}</p>
+                        ${evidenceHtml}
+                        ${data.recommended_action ? `<p class="text-indigo-300 pt-1 font-medium">💡 Recommendation: ${data.recommended_action}</p>` : ''}
+                        ${data.limitations_disclosure ? `<p class="text-[10px] text-slate-500 pt-1 border-t border-slate-800">⚠️ Limitation Disclosure: ${data.limitations_disclosure}</p>` : ''}
+                    </div>
+                `;
+                lucide.createIcons();
+                container.scrollTop = container.scrollHeight;
+            } catch (err) {
+                aiMsg.querySelector('p').innerText = 'Advisor error: ' + err.message;
+            }
+        }
+
+        // 9. Governance, Experimentation & Data Lineage
+        async function loadGovernanceData() {
+            try {
+                // Load Profiles Registry
+                const profRes = await fetch('/api/data/profiles');
+                const profData = await profRes.json();
+                const activeId = profData.active_profile_id;
+                const profContainer = document.getElementById('governanceProfilesContainer');
+                if (profContainer && profData.profiles) {
+                    profContainer.innerHTML = profData.profiles.map(p => {
+                        const isActive = p.id === activeId;
+                        const activeBorder = isActive ? 'border-indigo-500 ring-1 ring-indigo-500/50 bg-slate-900/90' : 'border-slate-800 bg-slate-900/50 hover:border-slate-700';
+                        const badgeColor = p.category === 'SYNTHETIC' ? 'bg-purple-500/20 text-purple-300 border-purple-500/40' : (p.category === 'PUBLIC_OBFUSCATED' ? 'bg-blue-500/20 text-blue-300 border-blue-500/40' : (p.category === 'PUBLIC_ANONYMIZED' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40' : 'bg-amber-500/20 text-amber-300 border-amber-500/40'));
+                        
+                        const actionBtn = isActive 
+                            ? `<span class="px-2.5 py-1 bg-emerald-500/20 text-emerald-300 font-bold text-[11px] rounded border border-emerald-500/40 flex items-center space-x-1"><i data-lucide="check" class="w-3.5 h-3.5"></i><span>Active Dataset</span></span>`
+                            : `<button onclick="onGlobalDatasetChange('${p.id}')" class="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-[11px] rounded transition shadow flex items-center space-x-1"><i data-lucide="arrow-right" class="w-3.5 h-3.5"></i><span>Activate Profile</span></button>`;
+
+                        return `
+                            <div class="border ${activeBorder} rounded-xl p-4 space-y-3 transition">
+                                <div class="flex items-start justify-between gap-2 border-b border-slate-800 pb-2.5">
+                                    <div>
+                                        <div class="flex items-center space-x-2">
+                                            <h4 class="font-bold text-white text-sm">${p.name}</h4>
+                                            <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border ${badgeColor}">${p.category}</span>
+                                        </div>
+                                        <p class="text-[11px] text-slate-400 mt-0.5">
+                                            License: <span class="text-slate-300">${p.license}</span> • Range: <span class="font-mono text-slate-300">${p.date_range}</span>
+                                        </p>
+                                    </div>
+                                    <div>${actionBtn}</div>
+                                </div>
+                                <p class="text-[11px] text-slate-300 leading-relaxed">${p.provenance}</p>
+                                <div>
+                                    <span class="text-emerald-400 font-semibold uppercase text-[10px] tracking-wider block mb-1">Supported Metrics:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        ${(p.supported_metrics || []).map(m => `<span class="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-300 border border-emerald-500/20">${m}</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div>
+                                    <span class="text-amber-400 font-semibold uppercase text-[10px] tracking-wider block mb-1">Unavailable Metrics & Exclusions:</span>
+                                    <div class="flex flex-wrap gap-1">
+                                        ${(p.unavailable_metrics || []).map(u => `<span class="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30">${u}</span>`).join('')}
+                                    </div>
+                                </div>
+                                <div class="pt-1 flex items-center justify-between text-[10px] text-slate-400 border-t border-slate-800/80">
+                                    <span>Source: <a href="${p.source_url}" target="_blank" class="text-indigo-400 underline hover:text-indigo-300">${p.source_name || p.source_url}</a></span>
+                                    <span class="font-mono text-slate-400">ID: ${p.id}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                const valRes = await fetch('/api/data/validation');
+                const val = await valRes.json();
+
+                const sumContainer = document.getElementById('governanceDatasetsSummary');
+                sumContainer.innerHTML = Object.entries(val.reports || {}).map(([name, r]) => `
+                    <div class="bg-slate-900 p-3 rounded-lg border border-slate-800">
+                        <span class="text-slate-400 uppercase text-[10px] font-bold">${name}</span>
+                        <div class="text-base font-bold text-white mt-1">${(r.valid_rows || 0).toLocaleString()} rows</div>
+                        <span class="text-[10px] text-emerald-400 font-medium">Verified Clean</span>
+                    </div>
+                `).join('');
+
+                // Load Experiments
+                const expRes = await fetch('/api/experimentation/reports');
+                const experiments = await expRes.json();
+                const expContainer = document.getElementById('experimentsContainer');
+                expContainer.innerHTML = experiments.map(exp => `
+                    <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-2.5 text-xs">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1 border-b border-slate-800 pb-2">
+                            <div class="flex items-center space-x-2">
+                                <span class="font-bold text-white text-sm">${exp.name}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-indigo-500/20 text-indigo-300">${exp.channel}</span>
+                                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">SIMULATED BENCHMARK</span>
+                            </div>
+                            <span class="font-semibold ${exp.statistical_significance.is_significant ? 'text-emerald-400' : 'text-amber-400'}">
+                                ${exp.statistical_significance.conclusion} (p = ${exp.statistical_significance.p_value})
+                            </span>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-[11px] text-slate-300 pt-1">
+                            <div><span class="text-slate-400">Treatment Rate:</span> ${exp.sample_sizes.treatment_rate_pct}% (${exp.sample_sizes.treatment_conversions} / ${exp.sample_sizes.treatment_audience.toLocaleString()})</div>
+                            <div><span class="text-slate-400">Control Holdout Rate:</span> ${exp.sample_sizes.control_rate_pct}% (${exp.sample_sizes.control_conversions} / ${exp.sample_sizes.control_audience.toLocaleString()})</div>
+                            <div><span class="text-slate-400">Relative Lift:</span> <strong class="text-emerald-400 font-bold">+${exp.statistical_significance.relative_lift_pct}%</strong></div>
+                            <div><span class="text-slate-400">Incremental Net Profit:</span> <strong class="text-white font-bold">+$${exp.financial_incrementality.net_incremental_profit.toLocaleString()}</strong></div>
+                        </div>
+                        <div class="text-[10px] text-slate-400 italic">Design: ${exp.test_design} • Duration: ${exp.duration_days} days • 95% CI: [${exp.statistical_significance.ci_95_relative_lift[0]}%, ${exp.statistical_significance.ci_95_relative_lift[1]}%]</div>
+                        <div class="p-2 bg-amber-950/20 border border-amber-800/40 rounded text-[10px] text-amber-300/90 leading-relaxed">
+                            <strong>⚠️ Evidence Limitation Disclosure:</strong> ${exp.governance_advisory}
+                        </div>
+                    </div>
+                `).join('');
+
+                // Load Approvals
+                const appRes = await fetch('/api/optimization/approvals');
+                const approvals = await appRes.json();
+                const appContainer = document.getElementById('approvalsListContainer');
+                if (approvals.length === 0) {
+                    appContainer.innerHTML = '<p class="text-slate-500">No budget approvals recorded yet.</p>';
+                } else {
+                    appContainer.innerHTML = approvals.map(a => `
+                        <div class="p-2.5 bg-slate-900 rounded border border-slate-800 space-y-1">
+                            <div class="flex items-center justify-between font-medium">
+                                <span class="text-white font-semibold">${a.scenario_name}</span>
+                                <span class="text-emerald-400 font-bold">$${a.proposed_spend.toLocaleString()}</span>
+                            </div>
+                            <div class="text-slate-400 text-[11px]">Approved by <strong class="text-slate-300">${a.user_role}</strong> at ${a.timestamp.substring(0, 19).replace('T', ' ')}</div>
+                            <div class="text-slate-400 text-[11px] italic">"${a.notes || 'Approved'}"</div>
+                        </div>
+                    `).join('');
+                }
+
+                // Load System Audit Trail
+                const auditRes = await fetch('/api/data/audit-log');
+                const audit = await auditRes.json();
+                const auditContainer = document.getElementById('systemAuditTrailContainer');
+                auditContainer.innerHTML = (audit.audit_trail || []).slice(0, 15).map(log => `
+                    <div class="border-b border-slate-800/80 py-1">
+                        <span class="text-slate-500">[${log.timestamp.substring(11, 19)}]</span>
+                        <span class="text-indigo-400 font-bold">${log.event_type}</span>:
+                        <span class="text-slate-300">${log.details}</span>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                console.error('Failed to load governance data:', err);
+            }
+        }
+
+        // Upload Modal Controls
+        function openUploadModal() { document.getElementById('uploadModal').classList.remove('hidden'); }
+        function closeUploadModal() { document.getElementById('uploadModal').classList.add('hidden'); }
+
+        async function submitUpload() {
+            const table = document.getElementById('uploadTableSelect').value;
+            const fileInput = document.getElementById('uploadFileInput');
+            const mappingText = document.getElementById('uploadMappingInput').value.trim();
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                alert('Please choose a file to upload.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('dataset_name', table);
+            formData.append('file', fileInput.files[0]);
+            if (mappingText) formData.append('column_mapping', mappingText);
+
+            try {
+                const res = await fetch('/api/data/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                closeUploadModal();
+                alert(`Uploaded '${data.filename}' successfully! Loaded ${data.rows_loaded} rows.`);
+                await checkSystemStatus();
+                await loadAllDashboardData();
+            } catch (err) {
+                alert('Upload failed: ' + err.message);
+            }
+        }
+
+        async function resetSyntheticData() {
+            if (!confirm('Reset back to reproducible 12-month synthetic benchmark?')) return;
+            try {
+                await fetch('/api/data/reset', { method: 'POST' });
+                alert('Reset complete. Synthetic benchmark active.');
+                await checkSystemStatus();
+                await loadAllDashboardData();
+            } catch (err) {
+                alert('Reset failed: ' + err.message);
+            }
+        }
+
+        // Direct Download of Audit & Financial Reconciliation Report
+        function downloadAuditReport(format = 'markdown') {
+            const url = `/api/data/download-report?format=${encodeURIComponent(format)}`;
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>

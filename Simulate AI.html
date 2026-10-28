@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIMULATE.AI — What-If Business Simulator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'] },
+          colors: {
+            appbg: '#F7F9FC',
+            appcard: '#FFFFFF',
+            primaryblue: '#2563EB',
+            appteal: '#0D9488',
+            lightblue: '#EAF4FF',
+            palemint: '#E6F8EF',
+            lightlavender: '#F0EDFF',
+            maintext: '#263449',
+            sectext: '#64748B',
+            posgreen: '#15803D',
+            warnamber: '#D97706',
+            riskred: '#DC2626'
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- React 18 & ReactDOM -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  
+  <!-- Babel for JSX in-browser compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Chart.js for data visualization -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body {
+      background-color: #F7F9FC;
+      color: #263449;
+      font-family: 'Inter', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #F1F5F9;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 4px;
+    }
+    /* Subtle card hover animation */
+    .hover-card {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .hover-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px -4px rgba(37, 99, 235, 0.08);
+    }
+  </style>
+</head>
+<body class="bg-appbg text-maintext min-h-screen">
+  <div id="root"></div>
+
+  <!-- Main React Application Script -->
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    // --- API HELPER UTILITIES ---
+    const API = {
+      async getHealth() {
+        const res = await fetch('/api/health');
+        return res.json();
+      },
+      async getMetadata() {
+        const res = await fetch('/api/metadata');
+        return res.json();
+      },
+      async getDataQuality() {
+        const res = await fetch('/api/data-quality');
+        return res.json();
+      },
+      async getScenarios() {
+        const res = await fetch('/api/scenarios');
+        return res.json();
+      },
+      async getScenario(id) {
+        const res = await fetch(`/api/scenarios/${id}`);
+        return res.json();
+      },
+      async runSimulation(payload) {
+        const res = await fetch('/api/simulate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        return res.json();
+      },
+      async compareScenarios(ids) {
+        const res = await fetch('/api/scenarios/compare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ scenario_ids: ids })
+        });
+        return res.json();
+      },
+      async queryCopilot(prompt, activeScenarioId) {
+        const res = await fetch('/api/copilot/query', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, active_scenario_id: activeScenarioId })
+        });
+        return res.json();
+      },
+      async getRecommendations() {
+        const res = await fetch('/api/recommendations');
+        return res.json();
+      },
+      async exportScenario(id) {
+        const res = await fetch(`/api/export/${id}`);
+        return res.json();
+      },
+      async resetToDefaults() {
+        const res = await fetch('/api/reset', { method: 'POST' });
+        return res.json();
+      }
+    };
+
+    // --- MAIN APP COMPONENT ---
+    function App() {
+      const [activeTab, setActiveTab] = useState('dashboard');
+      const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+      const [activeScenarioId, setActiveScenarioId] = useState('scen-status-quo');
+      const [activeResult, setActiveResult] = useState(null);
+      const [allScenarios, setAllScenarios] = useState([]);
+      const [loading, setLoading] = useState(true);
+      const [simulating, setSimulating] = useState(false);
+      const [simProgress, setSimProgress] = useState(0);
+      const [dataQuality, setDataQuality] = useState(null);
+      const [metadata, setMetadata] = useState(null);
+      const [bannerDismissed, setBannerDismissed] = useState(false);
+
+      // Fetch initial scenarios and data quality
+      useEffect(() => {
+        loadInitialData();
+      }, []);
+
+      const loadInitialData = async () => {
+        setLoading(true);
+        try {
+          const [scens, dq, meta] = await Promise.all([
+            API.getScenarios(),
+            API.getDataQuality(),
+            API.getMetadata()
+          ]);
+          setAllScenarios(scens);
+          setDataQuality(dq);
+          setMetadata(meta);
+
+          // Select first or default scenario
+          const defaultId = scens.length > 0 ? scens[0].id : 'scen-status-quo';
+          setActiveScenarioId(defaultId);
+          const res = await API.getScenario(defaultId);
+          setActiveResult(res);
+        } catch (err) {
+          console.error("Error loading initial data:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const selectScenario = async (id) => {
+        setActiveScenarioId(id);
+        setLoading(true);
+        try {
+          const res = await API.getScenario(id);
+          setActiveResult(res);
+        } catch (err) {
+          console.error("Failed to load scenario:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      const triggerSimulation = async (assumptionPayload) => {
+        setSimulating(true);
+        setSimProgress(15);
+        const timer1 = setTimeout(() => setSimProgress(45), 200);
+        const timer2 = setTimeout(() => setSimProgress(80), 400);
+
+        try {
+          const result = await API.runSimulation(assumptionPayload);
+          setSimProgress(100);
+          setTimeout(async () => {
+            setActiveResult(result);
+            setActiveScenarioId(result.scenario_id);
+            const scens = await API.getScenarios();
+            setAllScenarios(scens);
+            setSimulating(false);
+            setSimProgress(0);
+          }, 350);
+        } catch (err) {
+          console.error("Simulation failed:", err);
+          setSimulating(false);
+          setSimProgress(0);
+        }
+      };
+
+      // Quick 20% Growth Action Button
+      const handleQuick20Percent = () => {
+        triggerSimulation({
+          name: "Management 20% Demand Test (Status Quo)",
+          description: "One-click test evaluating whether current resources can support 20% sales expansion.",
+          sales_growth_pct: 20.0,
+          asp_change_pct: 0.0,
+          additional_hiring_count: 0,
+          allow_overtime: false,
+          additional_shifts: 0,
+          outsource_logistics: false,
+          buffer_inventory_units: 0
+        });
+      };
+
+      return (
+        <div className="flex h-screen overflow-hidden bg-appbg">
+          {/* SIDEBAR NAVIGATION */}
+          <aside className={`${sidebarCollapsed ? 'w-20' : 'w-64'} bg-appcard border-r border-slate-200 flex flex-col transition-all duration-300 z-30`}>
+            {/* Brand Header */}
+            <div className="h-16 flex items-center justify-between px-4 border-b border-slate-100">
+              <div className="flex items-center space-x-3 overflow-hidden">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-primaryblue to-appteal flex items-center justify-center text-white font-bold shadow-md shadow-blue-500/20">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                {!sidebarCollapsed && (
+                  <div>
+                    <h1 className="font-extrabold text-base tracking-tight text-maintext leading-tight">SIMULATE<span className="text-primaryblue">.AI</span></h1>
+                    <p className="text-[10px] text-sectext font-medium uppercase tracking-wider">What-If Simulator</p>
+                  </div>
+                )}
+              </div>
+              <button 
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+                title="Toggle Sidebar"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={sidebarCollapsed ? "M13 5l7 7-7 7M5 5l7 7-7 7" : "M11 19l-7-7 7-7M19 19l-7-7 7-7"} />
+                </svg>
+              </button>
+            </div>
+
+            {/* Quick 20% Action Card */}
+            {!sidebarCollapsed && (
+              <div className="p-3 mx-3 my-3 bg-lightblue rounded-xl border border-blue-100 shadow-sm">
+                <div className="flex items-center justify-between mb-1.5">
+                  <span className="text-xs font-bold text-primaryblue flex items-center">
+                    <span className="w-2 h-2 rounded-full bg-primaryblue animate-ping mr-1.5 inline-block"></span>
+                    Strategic Target
+                  </span>
+                  <span className="text-[11px] font-semibold text-blue-700 bg-white px-2 py-0.5 rounded-md border border-blue-200">+20% Sales</span>
+                </div>
+                <p className="text-[11px] text-slate-600 mb-2 leading-relaxed">Test feasibility of 20% sales growth against existing resources.</p>
+                <button
+                  onClick={handleQuick20Percent}
+                  className="w-full py-2 px-3 bg-primaryblue hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm shadow-blue-500/20 transition-all flex items-center justify-center space-x-1.5"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Simulate 20% Growth</span>
+                </button>
+              </div>
+            )}
+
+            {/* Navigation Menu */}
+            <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto custom-scrollbar">
+              {[
+                { id: 'dashboard', label: 'Executive Dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
+                { id: 'builder', label: 'Scenario Builder', icon: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4' },
+                { id: 'workforce', label: 'Workforce Capacity', icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z' },
+                { id: 'inventory', label: 'Supply Chain & Inventory', icon: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4' },
+                { id: 'operations', label: 'Production & Ops', icon: 'M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z' },
+                { id: 'financial', label: 'Financial Impact', icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' },
+                { id: 'comparison', label: 'Scenario Comparison', icon: 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z' },
+                { id: 'copilot', label: 'AI Scenario Copilot', icon: 'M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z' },
+                { id: 'datahub', label: 'Reports & Data Hub', icon: 'M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4' }
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id)}
+                  className={`w-full flex items-center space-x-3 px-3 py-2.5 rounded-xl text-xs font-semibold transition-all ${
+                    activeTab === item.id 
+                      ? 'bg-lightblue text-primaryblue font-bold shadow-xs' 
+                      : 'text-slate-600 hover:text-maintext hover:bg-slate-100/70'
+                  }`}
+                  title={item.label}
+                >
+                  <svg className={`w-4 h-4 flex-shrink-0 ${activeTab === item.id ? 'text-primaryblue' : 'text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={item.icon} />
+                  </svg>
+                  {!sidebarCollapsed && <span>{item.label}</span>}
+                </button>
+              ))}
+            </nav>
+
+            {/* Data Quality & System Indicator */}
+            {!sidebarCollapsed && dataQuality && (
+              <div className="p-3 border-t border-slate-100 bg-slate-50/70">
+                <div className="flex items-center justify-between text-[11px] mb-1">
+                  <span className="text-sectext font-medium">Data Quality Score</span>
+                  <span className={`font-bold ${dataQuality.overall_score_pct >= 90 ? 'text-posgreen' : 'text-warnamber'}`}>
+                    {dataQuality.overall_score_pct}%
+                  </span>
+                </div>
+                <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mb-2">
+                  <div 
+                    className={`h-full rounded-full ${dataQuality.overall_score_pct >= 90 ? 'bg-posgreen' : 'bg-warnamber'}`} 
+                    style={{ width: `${dataQuality.overall_score_pct}%` }}
+                  ></div>
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-500">
+                  <span className="flex items-center">
+                    <span className="w-1.5 h-1.5 rounded-full bg-posgreen mr-1"></span>
+                    8 Agents Active
+                  </span>
+                  <span className="bg-slate-200 text-slate-700 px-1.5 py-0.5 rounded text-[9px] font-mono">v1.0</span>
+                </div>
+              </div>
+            )}
+          </aside>
+
+          {/* MAIN CONTENT AREA */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            {/* TOP BAR */}
+            <header className="h-16 bg-appcard border-b border-slate-200 px-6 flex items-center justify-between z-20">
+              <div className="flex items-center space-x-4">
+                <span className="text-xs font-semibold uppercase tracking-wider text-sectext">Active Scenario:</span>
+                <select
+                  value={activeScenarioId}
+                  onChange={(e) => selectScenario(e.target.value)}
+                  className="bg-slate-50 border border-slate-200 text-maintext text-xs rounded-lg px-3 py-1.5 font-semibold focus:outline-none focus:ring-2 focus:ring-primaryblue focus:border-transparent transition-all"
+                >
+                  {allScenarios.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.growth_pct >= 0 ? `+${s.growth_pct}%` : `${s.growth_pct}%`} Growth)
+                    </option>
+                  ))}
+                </select>
+
+                {activeResult && (
+                  <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold ${
+                    activeResult.is_feasible 
+                      ? 'bg-palemint text-posgreen border border-green-200' 
+                      : 'bg-red-50 text-riskred border border-red-200'
+                  }`}>
+                    <span className={`w-1.5 h-1.5 rounded-full mr-1.5 ${activeResult.is_feasible ? 'bg-posgreen' : 'bg-riskred'}`}></span>
+                    {activeResult.is_feasible ? 'Feasible Plan' : `Infeasible: ${activeResult.primary_bottleneck}`}
+                  </span>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setActiveTab('builder')}
+                  className="px-3.5 py-2 bg-primaryblue hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm shadow-blue-500/20 transition-all flex items-center space-x-1.5"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                  <span>Edit Assumptions</span>
+                </button>
+
+                <button
+                  onClick={() => setActiveTab('comparison')}
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-all flex items-center space-x-1"
+                >
+                  <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                  <span>Compare (3+)</span>
+                </button>
+              </div>
+            </header>
+
+            {/* CALCULATION PROGRESS INDICATOR */}
+            {simulating && (
+              <div className="w-full bg-blue-100 h-1 overflow-hidden">
+                <div 
+                  className="bg-primaryblue h-full transition-all duration-300 ease-out"
+                  style={{ width: `${simProgress}%` }}
+                ></div>
+              </div>
+            )}
+
+            {/* MANDATORY NOTICE BANNER */}
+            {!bannerDismissed && (
+              <div className="bg-amber-50 border-b border-amber-200 px-6 py-2 flex items-center justify-between text-xs text-amber-900">
+                <div className="flex items-center space-x-2">
+                  <svg className="w-4 h-4 text-warnamber flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  <span className="font-semibold">Synthetic Demonstration Data — Not Actual Company Results</span>
+                  <span className="text-amber-700 font-normal">| Live Connectors: ERP & HRIS are currently <span className="font-bold underline">Not Connected</span>.</span>
+                </div>
+                <button 
+                  onClick={() => setBannerDismissed(true)}
+                  className="text-amber-700 hover:text-amber-950 text-xs font-semibold px-2 py-0.5 rounded hover:bg-amber-100"
+                >
+                  Dismiss
+                </button>
+              </div>
+            )}
+
+            {/* DYNAMIC TAB VIEW CONTAINER */}
+            <main className="flex-1 overflow-y-auto p-6 custom-scrollbar bg-appbg">
+              {loading && !activeResult ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="w-12 h-12 border-4 border-primaryblue border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                    <p className="text-xs font-semibold text-sectext">Calculating deterministic scenario models...</p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  {activeTab === 'dashboard' && <ExecutiveDashboard result={activeResult} onTrigger20={handleQuick20Percent} onNavigate={setActiveTab} />}
+                  {activeTab === 'builder' && <ScenarioBuilder activeResult={activeResult} onSimulate={triggerSimulation} onSelect={selectScenario} />}
+                  {activeTab === 'workforce' && <WorkforcePlanner result={activeResult} onSimulate={triggerSimulation} />}
+                  {activeTab === 'inventory' && <InventorySupplySimulator result={activeResult} onSimulate={triggerSimulation} />}
+                  {activeTab === 'operations' && <ProductionOperationsPlanner result={activeResult} onSimulate={triggerSimulation} />}
+                  {activeTab === 'financial' && <FinancialImpactAnalysis result={activeResult} />}
+                  {activeTab === 'comparison' && <ScenarioComparisonView onSelect={selectScenario} />}
+                  {activeTab === 'copilot' && <AICopilotView activeResult={activeResult} />}
+                  {activeTab === 'datahub' && <ReportsDataHub metadata={metadata} dataQuality={dataQuality} activeResult={activeResult} onReset={loadInitialData} />}
+                </div>
+              )}
+            </main>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PAGE 1: EXECUTIVE SIMULATION DASHBOARD
+    // =========================================================================
+    function ExecutiveDashboard({ result, onTrigger20, onNavigate }) {
+      if (!result) return null;
+      const { assumptions, demand, workforce, operations, finance, risk } = result;
+
+      return (
+        <div className="space-y-6">
+          {/* Executive Header Banner */}
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <div className="flex items-center space-x-2 mb-1">
+                <span className="text-xs font-bold text-primaryblue tracking-wider uppercase">Strategic Decision Simulation</span>
+                <span className="text-slate-300">•</span>
+                <span className="text-xs text-sectext">NovaManufacturing Ltd.</span>
+              </div>
+              <h2 className="text-2xl font-bold text-maintext tracking-tight">{assumptions.name}</h2>
+              <p className="text-xs text-sectext mt-1 max-w-2xl">{assumptions.description}</p>
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={onTrigger20}
+                className="px-4 py-2.5 bg-gradient-to-r from-primaryblue to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 transition-all flex items-center space-x-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                <span>Simulate 20% Sales Growth</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Core Decision Summary Status Card */}
+          <div className={`rounded-2xl p-6 border shadow-sm ${
+            result.is_feasible 
+              ? 'bg-palemint/40 border-green-200' 
+              : 'bg-red-50/50 border-red-200'
+          }`}>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-start space-x-4">
+                <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-white shadow-sm flex-shrink-0 ${
+                  result.is_feasible ? 'bg-posgreen' : 'bg-riskred'
+                }`}>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    {result.is_feasible ? (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                    ) : (
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    )}
+                  </svg>
+                </div>
+                <div>
+                  <div className="flex items-center space-x-2">
+                    <span className={`text-xs font-bold uppercase tracking-wider ${result.is_feasible ? 'text-posgreen' : 'text-riskred'}`}>
+                      {result.is_feasible ? 'Operationally Feasible' : 'Operational Bottleneck Detected'}
+                    </span>
+                    <span className="text-xs text-slate-400">•</span>
+                    <span className="text-xs font-medium text-slate-600">Risk Score: {risk.overall_risk_score}/10 ({risk.risk_level})</span>
+                  </div>
+                  <h3 className="text-lg font-bold text-maintext mt-0.5">
+                    {result.is_feasible ? (
+                      `All ${operations.achievable_units.toLocaleString()} Units Deliverable with Identified Interventions`
+                    ) : (
+                      `Capped at ${operations.achievable_units.toLocaleString()} Units due to ${operations.binding_constraint}`
+                    )}
+                  </h3>
+                  <p className="text-xs text-slate-600 mt-1 max-w-3xl leading-relaxed">{operations.constraint_explanation}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4 self-end md:self-center">
+                <div className="text-right">
+                  <span className="text-[10px] text-sectext uppercase font-bold tracking-wider">Incremental Profit</span>
+                  <p className={`text-xl font-extrabold ${finance.incremental_operating_profit >= 0 ? 'text-posgreen' : 'text-riskred'}`}>
+                    {finance.incremental_operating_profit >= 0 ? `+$${finance.incremental_operating_profit.toLocaleString()}` : `-$${Math.abs(finance.incremental_operating_profit).toLocaleString()}`}
+                  </p>
+                  <span className="text-[10px] text-sectext">monthly EBIT impact</span>
+                </div>
+                <button
+                  onClick={() => onNavigate('copilot')}
+                  className="px-3.5 py-2 bg-white hover:bg-slate-50 border border-slate-300 text-maintext text-xs font-semibold rounded-lg shadow-2xs transition-all flex items-center space-x-1.5"
+                >
+                  <svg className="w-4 h-4 text-primaryblue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                  </svg>
+                  <span>Ask Copilot</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* 6 High-Level Executive KPI Cards */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+            {[
+              {
+                label: 'Simulated Revenue',
+                value: `$${(finance.simulated_revenue / 1000).toFixed(1)}k`,
+                sub: `${finance.revenue_growth_pct >= 0 ? '+' : ''}${finance.revenue_growth_pct}% vs baseline`,
+                subColor: 'text-posgreen',
+                icon: 'M13 7h8m0 0v8m0-8l-8 8-4-4-6 6'
+              },
+              {
+                label: 'Operating Profit (EBIT)',
+                value: `$${(finance.simulated_operating_profit / 1000).toFixed(1)}k`,
+                sub: `${finance.operating_margin_pct}% margin`,
+                subColor: finance.operating_margin_pct >= 14 ? 'text-posgreen' : 'text-warnamber',
+                icon: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z'
+              },
+              {
+                label: 'Workforce Utilization',
+                value: `${workforce.capacity_utilization_pct}%`,
+                sub: workforce.is_bottleneck ? 'Deficit / Shortfall' : 'Feasible / OT used',
+                subColor: workforce.is_bottleneck ? 'text-riskred' : 'text-posgreen',
+                icon: 'M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'
+              },
+              {
+                label: 'Production Output',
+                value: `${operations.production_utilization_pct}%`,
+                sub: operations.is_production_bottleneck ? 'Capacity capped' : 'Sufficient lines',
+                subColor: operations.is_production_bottleneck ? 'text-riskred' : 'text-posgreen',
+                icon: 'M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10'
+              },
+              {
+                label: 'Logistics Throughput',
+                value: `${operations.logistics_utilization_pct}%`,
+                sub: operations.is_logistics_bottleneck ? 'Warehouse full' : 'Clear / 3PL active',
+                subColor: operations.is_logistics_bottleneck ? 'text-riskred' : 'text-posgreen',
+                icon: 'M8 17a2 2 0 100 4 2 2 0 000-4zm10 0a2 2 0 100 4 2 2 0 000-4zM2 5h3l2.5 10h10l3-7H6'
+              },
+              {
+                label: 'Cash & Working Capital',
+                value: `$${(finance.total_cash_required / 1000).toFixed(1)}k`,
+                sub: finance.is_financially_feasible ? 'Within cash budget' : 'Budget exceeded',
+                subColor: finance.is_financially_feasible ? 'text-posgreen' : 'text-riskred',
+                icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z'
+              }
+            ].map((kpi, idx) => (
+              <div key={idx} className="bg-appcard rounded-xl p-4 border border-slate-200 shadow-2xs hover-card">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-medium text-sectext leading-tight">{kpi.label}</span>
+                  <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center text-slate-500">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d={kpi.icon} />
+                    </svg>
+                  </div>
+                </div>
+                <div className="text-xl font-bold text-maintext tracking-tight">{kpi.value}</div>
+                <span className={`text-[10px] font-semibold ${kpi.subColor}`}>{kpi.sub}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Visual Business Capacity Map */}
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-sm font-bold text-maintext">Visual Business Capacity Map</h3>
+                <p className="text-xs text-sectext">Operational subsystem headroom vs. simulated demand of {demand.simulated_total_units.toLocaleString()} units</p>
+              </div>
+              <span className="text-xs font-semibold text-primaryblue bg-lightblue px-2.5 py-1 rounded-md">
+                Binding: {operations.binding_constraint}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[
+                {
+                  title: '1. Workforce Labor',
+                  capText: `${workforce.available_productive_hours.toLocaleString()} hrs available`,
+                  reqText: `${workforce.required_labor_hours.toLocaleString()} hrs needed`,
+                  util: workforce.capacity_utilization_pct,
+                  status: workforce.is_bottleneck ? 'Critical Shortfall' : 'Adequate / OT',
+                  color: workforce.is_bottleneck ? 'bg-riskred' : (workforce.capacity_utilization_pct > 95 ? 'bg-warnamber' : 'bg-posgreen')
+                },
+                {
+                  title: '2. Production Lines',
+                  capText: `${operations.total_production_capacity_units.toLocaleString()} units net capacity`,
+                  reqText: `${demand.simulated_total_units.toLocaleString()} units requested`,
+                  util: operations.production_utilization_pct,
+                  status: operations.is_production_bottleneck ? 'Capacity Breached' : 'Within Threshold',
+                  color: operations.is_production_bottleneck ? 'bg-riskred' : (operations.production_utilization_pct > 90 ? 'bg-warnamber' : 'bg-posgreen')
+                },
+                {
+                  title: '3. Inventory & Suppliers',
+                  capText: `${operations.days_of_inventory_coverage} days stock coverage`,
+                  reqText: `${operations.starting_stock_units.toLocaleString()} units on hand`,
+                  util: Math.min(100, Math.round((30 / Math.max(1, operations.days_of_inventory_coverage)) * 100)),
+                  status: operations.projected_stockout_units > 0 ? `${operations.projected_stockout_units.toLocaleString()} Stockout Risk` : 'Adequate Safety Buffer',
+                  color: operations.projected_stockout_units > 0 ? 'bg-riskred' : 'bg-posgreen'
+                },
+                {
+                  title: '4. Logistics & Shipping',
+                  capText: `${operations.warehouse_throughput_capacity_units.toLocaleString()} units/mo warehouse`,
+                  reqText: `${operations.logistics_carrier_capacity_units.toLocaleString()} units fleet`,
+                  util: operations.logistics_utilization_pct,
+                  status: operations.is_logistics_bottleneck ? 'Logistics Bottleneck' : 'Throughput Managed',
+                  color: operations.is_logistics_bottleneck ? 'bg-riskred' : 'bg-posgreen'
+                }
+              ].map((sub, i) => (
+                <div key={i} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-xs font-bold text-maintext">{sub.title}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                      sub.color === 'bg-riskred' ? 'bg-red-100 text-riskred' : (sub.color === 'bg-warnamber' ? 'bg-amber-100 text-warnamber' : 'bg-green-100 text-posgreen')
+                    }`}>
+                      {sub.util}%
+                    </span>
+                  </div>
+                  <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden my-2">
+                    <div className={`h-full rounded-full ${sub.color}`} style={{ width: `${Math.min(100, sub.util)}%` }}></div>
+                  </div>
+                  <div className="text-[11px] text-sectext leading-tight mt-2">
+                    <p className="font-medium text-slate-700">{sub.capText}</p>
+                    <p>{sub.reqText}</p>
+                    <p className={`font-semibold text-[10px] mt-1 ${
+                      sub.color === 'bg-riskred' ? 'text-riskred' : 'text-slate-500'
+                    }`}>{sub.status}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Product Mix and Demand Projections */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Products Table */}
+            <div className="lg:col-span-2 bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-bold text-maintext">Product Line Demand & Resource Intensity</h3>
+                <span className="text-xs text-sectext">3 precision product families</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="text-[11px] font-bold text-sectext uppercase border-b border-slate-100 pb-2">
+                    <tr>
+                      <th className="py-2">Product Name</th>
+                      <th className="py-2 text-right">Baseline Units</th>
+                      <th className="py-2 text-right">Simulated Demand</th>
+                      <th className="py-2 text-right">ASP</th>
+                      <th className="py-2 text-right">Labor Hrs/Unit</th>
+                      <th className="py-2 text-right">Revenue Impact</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    {demand.products.map(p => (
+                      <tr key={p.product_id} className="hover:bg-slate-50/60">
+                        <td className="py-2.5 font-semibold text-maintext">
+                          {p.product_name}
+                          <span className="block text-[10px] text-sectext font-mono">{p.product_id}</span>
+                        </td>
+                        <td className="py-2.5 text-right text-slate-600">{p.baseline_units.toLocaleString()}</td>
+                        <td className="py-2.5 text-right font-bold text-primaryblue">{p.simulated_units.toLocaleString()}</td>
+                        <td className="py-2.5 text-right">${p.asp.toFixed(2)}</td>
+                        <td className="py-2.5 text-right text-slate-600">{p.labor_hours_per_unit}h</td>
+                        <td className="py-2.5 text-right font-bold text-slate-800">${p.simulated_revenue.toLocaleString()}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Strategic Risk & Mitigation Card */}
+            <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-bold text-maintext">Strategic Risk Assessment</h3>
+                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                    risk.risk_level === 'Low' ? 'bg-palemint text-posgreen' : (risk.risk_level === 'Moderate' ? 'bg-amber-100 text-warnamber' : 'bg-red-100 text-riskred')
+                  }`}>
+                    {risk.risk_level} Risk ({risk.overall_risk_score}/10)
+                  </span>
+                </div>
+                <div className="space-y-2.5 mb-4">
+                  {risk.risk_factors.length === 0 ? (
+                    <p className="text-xs text-posgreen font-medium">No severe operational risk triggers detected under this intervention profile.</p>
+                  ) : (
+                    risk.risk_factors.map((rf, idx) => (
+                      <div key={idx} className="p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                        <span className="text-[11px] font-bold text-maintext block">{rf.category}</span>
+                        <span className="text-[10px] text-sectext block leading-relaxed mt-0.5">{rf.detail}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+
+              <div>
+                <span className="text-[11px] font-bold text-maintext uppercase tracking-wider block mb-1.5">Actionable Mitigations</span>
+                <ul className="text-xs text-slate-600 space-y-1">
+                  {risk.mitigation_strategies.map((m, i) => (
+                    <li key={i} className="flex items-start space-x-1.5">
+                      <span className="text-primaryblue font-bold">•</span>
+                      <span>{m}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PAGE 2: SCENARIO BUILDER (INTERACTIVE SLIDERS & CONTROLS)
+    // =========================================================================
+    function ScenarioBuilder({ activeResult, onSimulate, onSelect }) {
+      const init = activeResult ? activeResult.assumptions : {
+        name: "Custom What-If Scenario",
+        sales_growth_pct: 20.0,
+        asp_change_pct: 0.0,
+        additional_hiring_count: 0,
+        allow_overtime: true,
+        max_overtime_allowance_pct: 100.0,
+        productivity_improvement_pct: 0.0,
+        additional_shifts: 0,
+        buffer_inventory_units: 0,
+        outsource_logistics: false,
+        additional_marketing_budget: 0.0,
+        available_capital_budget: 1250000.0
+      };
+
+      const [form, setForm] = useState(init);
+
+      // Keep form synced if activeResult changes externally
+      useEffect(() => {
+        if (activeResult) {
+          setForm(activeResult.assumptions);
+        }
+      }, [activeResult?.id]);
+
+      const handleChange = (field, val) => {
+        setForm(prev => ({ ...prev, [field]: val }));
+      };
+
+      const handleSubmit = (e) => {
+        e.preventDefault();
+        onSimulate(form);
+      };
+
+      const handlePreset = (growthPct, shifts, hiring, ot, outsourceLog, buffer) => {
+        const updated = {
+          ...form,
+          name: `${growthPct}% Growth Scenario`,
+          sales_growth_pct: growthPct,
+          additional_shifts: shifts,
+          additional_hiring_count: hiring,
+          allow_overtime: ot,
+          outsource_logistics: outsourceLog,
+          buffer_inventory_units: buffer
+        };
+        setForm(updated);
+        onSimulate(updated);
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-bold text-maintext">Scenario Builder & Strategic Lever Cockpit</h2>
+              <p className="text-xs text-sectext mt-0.5">Tune sales demand, workforce interventions, operations shifts, and 3PL fulfillment levers in real time.</p>
+            </div>
+            {/* Quick Presets */}
+            <div className="flex items-center space-x-2">
+              <span className="text-xs font-semibold text-sectext">Quick Presets:</span>
+              <button 
+                type="button"
+                onClick={() => handlePreset(10, 0, 0, true, false, 200)}
+                className="px-2.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg"
+              >
+                10% Growth
+              </button>
+              <button 
+                type="button"
+                onClick={() => handlePreset(20, 0, 0, false, false, 0)}
+                className="px-2.5 py-1.5 bg-lightblue hover:bg-blue-100 text-primaryblue text-xs font-bold rounded-lg"
+              >
+                20% Unconstrained
+              </button>
+              <button 
+                type="button"
+                onClick={() => handlePreset(20, 1, 4, true, true, 600)}
+                className="px-2.5 py-1.5 bg-palemint hover:bg-green-100 text-posgreen text-xs font-bold rounded-lg"
+              >
+                20% Balanced Feasible
+              </button>
+              <button 
+                type="button"
+                onClick={() => handlePreset(30, 2, 8, true, true, 1200)}
+                className="px-2.5 py-1.5 bg-lightlavender hover:bg-purple-100 text-purple-700 text-xs font-bold rounded-lg"
+              >
+                30% Aggressive
+              </button>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Pillar 1: Sales Demand & Commercial Strategy */}
+              <div className="bg-appcard rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center space-x-2 pb-2 border-b border-slate-100">
+                  <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-primaryblue font-bold">1</div>
+                  <div>
+                    <h3 className="text-xs font-bold text-maintext uppercase tracking-wider">Demand & Commercial</h3>
+                    <p className="text-[11px] text-sectext">Target sales expansion & price</p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <label>Target Sales Growth</label>
+                    <span className="text-primaryblue font-bold text-sm">+{form.sales_growth_pct}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="50"
+                    step="1"
+                    value={form.sales_growth_pct}
+                    onChange={(e) => handleChange('sales_growth_pct', parseFloat(e.target.value))}
+                    className="w-full accent-primaryblue h-2 bg-slate-200 rounded-lg cursor-pointer"
+                  />
+                  <div className="flex justify-between text-[10px] text-sectext mt-1">
+                    <span>0% (Baseline)</span>
+                    <span>20% (Target)</span>
+                    <span>50% (Max)</span>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <label>Average Selling Price (ASP) Adjustment</label>
+                    <span className="font-bold text-sm text-slate-700">{form.asp_change_pct >= 0 ? `+${form.asp_change_pct}%` : `${form.asp_change_pct}%`}</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="-10"
+                    max="15"
+                    step="0.5"
+                    value={form.asp_change_pct}
+                    onChange={(e) => handleChange('asp_change_pct', parseFloat(e.target.value))}
+                    className="w-full accent-primaryblue h-2 bg-slate-200 rounded-lg cursor-pointer"
+                  />
+                  <span className="text-[10px] text-sectext block mt-1">Elasticity models decoupled unit volume vs. revenue changes.</span>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-maintext block mb-1">Scenario Name</label>
+                  <input
+                    type="text"
+                    value={form.name}
+                    onChange={(e) => handleChange('name', e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-primaryblue focus:outline-none"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-maintext block mb-1">Additional Marketing Spend ($)</label>
+                  <input
+                    type="number"
+                    value={form.additional_marketing_budget}
+                    onChange={(e) => handleChange('additional_marketing_budget', parseFloat(e.target.value) || 0)}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-primaryblue focus:outline-none"
+                    placeholder="0"
+                  />
+                </div>
+              </div>
+
+              {/* Pillar 2: Workforce & Labor Interventions */}
+              <div className="bg-appcard rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center space-x-2 pb-2 border-b border-slate-100">
+                  <div className="w-8 h-8 rounded-lg bg-teal-50 flex items-center justify-center text-appteal font-bold">2</div>
+                  <div>
+                    <h3 className="text-xs font-bold text-maintext uppercase tracking-wider">Workforce & Human Capital</h3>
+                    <p className="text-[11px] text-sectext">Headcount, overtime & productivity</p>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <label>Additional Full-Time Hires</label>
+                    <span className="text-appteal font-bold text-sm">+{form.additional_hiring_count} Technicians</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="12"
+                    step="1"
+                    value={form.additional_hiring_count}
+                    onChange={(e) => handleChange('additional_hiring_count', parseInt(e.target.value))}
+                    className="w-full accent-appteal h-2 bg-slate-200 rounded-lg cursor-pointer"
+                  />
+                  <span className="text-[10px] text-sectext block mt-1">Recruitment: $3,500/hire. Includes 45-day onboarding ramp (65% initial productivity).</span>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <div>
+                    <span className="text-xs font-bold text-maintext block">Allow Overtime Hours</span>
+                    <span className="text-[10px] text-sectext">1.5x wage penalty per labor hour</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={form.allow_overtime}
+                    onChange={(e) => handleChange('allow_overtime', e.target.checked)}
+                    className="w-5 h-5 accent-primaryblue rounded cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <label>Lean Productivity Kaizen</label>
+                    <span className="text-slate-700 font-bold text-sm">+{form.productivity_improvement_pct}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="8"
+                    step="0.5"
+                    value={form.productivity_improvement_pct}
+                    onChange={(e) => handleChange('productivity_improvement_pct', parseFloat(e.target.value))}
+                    className="w-full accent-primaryblue h-2 bg-slate-200 rounded-lg cursor-pointer"
+                  />
+                  <span className="text-[10px] text-sectext block mt-1">Reduces standard labor hours required per manufactured unit.</span>
+                </div>
+              </div>
+
+              {/* Pillar 3: Operations, Shifts & Logistics */}
+              <div className="bg-appcard rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center space-x-2 pb-2 border-b border-slate-100">
+                  <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 font-bold">3</div>
+                  <div>
+                    <h3 className="text-xs font-bold text-maintext uppercase tracking-wider">Operations & Logistics</h3>
+                    <p className="text-[11px] text-sectext">Manufacturing shifts & 3PL fleet</p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-maintext block mb-1">Manufacturing Shift Structure</label>
+                  <select
+                    value={form.additional_shifts}
+                    onChange={(e) => handleChange('additional_shifts', parseInt(e.target.value))}
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs font-semibold text-maintext focus:ring-2 focus:ring-primaryblue focus:outline-none"
+                  >
+                    <option value={0}>Standard 1 Shift (Baseline, 160 hrs/mo)</option>
+                    <option value={1}>2 Shifts (+85% production capacity, $45k tooling Capex)</option>
+                    <option value={2}>3 Shifts (24/7 Operations, +170% capacity, $90k Capex)</option>
+                  </select>
+                </div>
+
+                <div className="flex items-center justify-between p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <div>
+                    <span className="text-xs font-bold text-maintext block">Outsource Overflow Logistics (3PL)</span>
+                    <span className="text-[10px] text-sectext">Overcomes 10,800 units warehouse cap ($5.25 surcharge)</span>
+                  </div>
+                  <input
+                    type="checkbox"
+                    checked={form.outsource_logistics}
+                    onChange={(e) => handleChange('outsource_logistics', e.target.checked)}
+                    className="w-5 h-5 accent-primaryblue rounded cursor-pointer"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <label>Pre-emptive Buffer Stock</label>
+                    <span className="text-primaryblue font-bold text-sm">+{form.buffer_inventory_units} units</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="2000"
+                    step="100"
+                    value={form.buffer_inventory_units}
+                    onChange={(e) => handleChange('buffer_inventory_units', parseInt(e.target.value))}
+                    className="w-full accent-primaryblue h-2 bg-slate-200 rounded-lg cursor-pointer"
+                  />
+                  <span className="text-[10px] text-sectext block mt-1">Prevents stockout in week 3 during 35-day supplier replenishment lag.</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Run & Save Actions */}
+            <div className="flex items-center justify-between bg-appcard p-4 rounded-2xl border border-slate-200 shadow-sm">
+              <div className="text-xs text-sectext">
+                <span className="font-semibold text-maintext">Deterministic Engine:</span> All calculations compute in ~25ms with zero LLM arithmetic fabrication.
+              </div>
+              <div className="flex items-center space-x-3">
+                <button
+                  type="button"
+                  onClick={() => setForm(init)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-xl transition-all"
+                >
+                  Reset Inputs
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-primaryblue hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-md shadow-blue-500/25 transition-all flex items-center space-x-2"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>Run Deterministic Simulation</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PAGE 3: WORKFORCE CAPACITY PLANNER
+    // =========================================================================
+    function WorkforcePlanner({ result, onSimulate }) {
+      if (!result) return null;
+      const { workforce, demand, assumptions } = result;
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-maintext">Workforce & Human Resource Capacity Planner</h2>
+              <p className="text-xs text-sectext mt-0.5">Calculates productive hours, contractual overtime limits, hiring ramp lag, and labor bottlenecks.</p>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+              workforce.is_bottleneck ? 'bg-red-100 text-riskred' : 'bg-palemint text-posgreen'
+            }`}>
+              {workforce.is_bottleneck ? 'Workforce Bottleneck' : 'Workforce Feasible'}
+            </span>
+          </div>
+
+          {/* Key Workforce Metrics */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Capacity Utilization</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{workforce.capacity_utilization_pct}%</div>
+              <span className={`text-[11px] font-semibold ${workforce.capacity_utilization_pct > 100 ? 'text-riskred' : 'text-posgreen'}`}>
+                {workforce.capacity_utilization_pct > 100 ? `Exceeds standard (${workforce.capacity_gap_hours.toFixed(0)}h gap)` : 'Within standard capacity'}
+              </span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Overtime Hours Utilized</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{workforce.overtime_hours_utilized.toFixed(0)} hrs</div>
+              <span className="text-[11px] text-sectext font-medium">Cost: ${workforce.overtime_cost.toLocaleString()} (1.5x wage)</span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Hiring Requirement</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{workforce.hiring_needed_count} Technicians</div>
+              <span className="text-[11px] text-sectext font-medium">Recruitment fee: ${workforce.hiring_cost.toLocaleString()}</span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Onboarding Productivity Lag</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{workforce.onboarding_lag_days} Days</div>
+              <span className="text-[11px] text-sectext font-medium">65% efficiency during ramp</span>
+            </div>
+          </div>
+
+          {/* Detailed Workforce Analysis */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-sm font-bold text-maintext mb-2">Labor Hours Capacity vs. Requirement</h3>
+              <p className="text-xs text-sectext mb-4">Comparison of productive available hours versus required hours for {demand.simulated_total_units.toLocaleString()} units.</p>
+
+              <div className="space-y-4">
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span>Available Standard Productive Hours</span>
+                    <span className="font-bold text-slate-800">{workforce.available_productive_hours.toLocaleString()} hrs</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                    <div className="bg-primaryblue h-full rounded-full" style={{ width: '100%' }}></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span>Required Labor Hours for Demand</span>
+                    <span className="font-bold text-riskred">{workforce.required_labor_hours.toLocaleString()} hrs</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                    <div 
+                      className={`h-full rounded-full ${workforce.required_labor_hours > workforce.available_productive_hours ? 'bg-riskred' : 'bg-posgreen'}`}
+                      style={{ width: `${Math.min(100, (workforce.required_labor_hours / Math.max(1, workforce.available_productive_hours)) * 100)}%` }}
+                    ></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between text-xs font-semibold mb-1">
+                    <span>Allowable Overtime Buffer</span>
+                    <span className="font-bold text-warnamber">684 hrs max</span>
+                  </div>
+                  <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden">
+                    <div className="bg-warnamber h-full rounded-full" style={{ width: '40%' }}></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6 p-4 rounded-xl bg-slate-50 border border-slate-100 text-xs text-slate-700 leading-relaxed">
+                <span className="font-bold text-maintext block mb-1">Agent 4 Workforce Diagnosis:</span>
+                {workforce.explanation}
+              </div>
+            </div>
+
+            {/* Role Breakdown Table */}
+            <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-sm font-bold text-maintext mb-3">Workforce Staffing by Operational Department</h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead className="text-[11px] font-bold text-sectext uppercase border-b border-slate-100 pb-2">
+                    <tr>
+                      <th className="py-2">Role Title</th>
+                      <th className="py-2 text-right">Headcount</th>
+                      <th className="py-2 text-right">Base Wage</th>
+                      <th className="py-2 text-right">Monthly Hours</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium">
+                    <tr>
+                      <td className="py-2.5 font-semibold text-maintext">Assembly Technician</td>
+                      <td className="py-2.5 text-right font-bold text-primaryblue">24 staff</td>
+                      <td className="py-2.5 text-right">$26.50/hr</td>
+                      <td className="py-2.5 text-right">3,648h</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 font-semibold text-maintext">CNC Machinist & Setup</td>
+                      <td className="py-2.5 text-right font-bold text-primaryblue">12 staff</td>
+                      <td className="py-2.5 text-right">$32.00/hr</td>
+                      <td className="py-2.5 text-right">1,766h</td>
+                    </tr>
+                    <tr>
+                      <td className="py-2.5 font-semibold text-maintext">Quality & Inspection Engineer</td>
+                      <td className="py-2.5 text-right font-bold text-primaryblue">6 staff</td>
+                      <td className="py-2.5 text-right">$34.00/hr</td>
+                      <td className="py-2.5 text-right">941h</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs text-sectext">Need to recruit or adjust overtime?</span>
+                <button
+                  onClick={() => onSimulate({ ...assumptions, additional_hiring_count: (assumptions.additional_hiring_count || 0) + 2, allow_overtime: true })}
+                  className="px-3.5 py-1.5 bg-primaryblue hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-2xs"
+                >
+                  + Add 2 Technicians & Simulate
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PAGE 4: INVENTORY & SUPPLY CHAIN SIMULATOR
+    // =========================================================================
+    function InventorySupplySimulator({ result, onSimulate }) {
+      if (!result) return null;
+      const { operations, demand, assumptions } = result;
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-maintext">Inventory & Supply Chain Simulator</h2>
+              <p className="text-xs text-sectext mt-0.5">Assesses stock coverage, safety buffer depletion, supplier lead times (28-42 days), and stockout exposure.</p>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+              operations.projected_stockout_units > 0 ? 'bg-red-100 text-riskred' : 'bg-palemint text-posgreen'
+            }`}>
+              {operations.projected_stockout_units > 0 ? `${operations.projected_stockout_units.toLocaleString()} Stockout Risk` : 'Inventory Adequate'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Days of Stock Coverage</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{operations.days_of_inventory_coverage} Days</div>
+              <span className={`text-[11px] font-semibold ${operations.days_of_inventory_coverage < 25 ? 'text-warnamber' : 'text-posgreen'}`}>
+                Target buffer: 30 days
+              </span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Current Stock on Hand</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{operations.starting_stock_units.toLocaleString()} units</div>
+              <span className="text-[11px] text-sectext font-medium">Safety stock: {operations.safety_stock_units.toLocaleString()}</span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Supplier Monthly Capacity</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{operations.supplier_capacity_units.toLocaleString()} units</div>
+              <span className={`text-[11px] font-semibold ${operations.is_supplier_bottleneck ? 'text-riskred' : 'text-posgreen'}`}>
+                {operations.is_supplier_bottleneck ? 'Supplier constrained' : 'Supplier capacity ample'}
+              </span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Annual Holding Cost</span>
+              <div className="text-2xl font-bold text-maintext mt-1">${(operations.inventory_holding_cost_annual / 1000).toFixed(1)}k/yr</div>
+              <span className="text-[11px] text-sectext font-medium">Rate: 18-22% annual carrying</span>
+            </div>
+          </div>
+
+          {/* Time-Phased 4-Week Inventory Trajectory */}
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h3 className="text-sm font-bold text-maintext mb-1">Time-Phased 4-Week Stock Depletion Trajectory</h3>
+            <p className="text-xs text-sectext mb-4">Shows projected weekly stock levels under 20% sales demand with 35-day supplier replenishment lag.</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {[
+                { week: 'Week 1', demand: Math.round(demand.simulated_total_units * 0.25), stock: operations.starting_stock_units - Math.round(demand.simulated_total_units * 0.25), status: 'Normal' },
+                { week: 'Week 2', demand: Math.round(demand.simulated_total_units * 0.25), stock: operations.starting_stock_units - Math.round(demand.simulated_total_units * 0.50), status: 'Buffer Dip' },
+                { week: 'Week 3', demand: Math.round(demand.simulated_total_units * 0.25), stock: Math.max(0, operations.starting_stock_units - Math.round(demand.simulated_total_units * 0.75)), status: operations.projected_stockout_units > 0 ? 'Stockout Risk' : 'Protected' },
+                { week: 'Week 4', demand: Math.round(demand.simulated_total_units * 0.25), stock: Math.max(0, operations.starting_stock_units - demand.simulated_total_units + 2500), status: 'Replenishment Landed' }
+              ].map((w, idx) => (
+                <div key={idx} className="p-4 rounded-xl border border-slate-100 bg-slate-50/50">
+                  <div className="flex items-center justify-between text-xs font-bold text-maintext mb-2">
+                    <span>{w.week}</span>
+                    <span className={`text-[10px] px-2 py-0.5 rounded ${w.status === 'Stockout Risk' ? 'bg-red-100 text-riskred' : 'bg-green-100 text-posgreen'}`}>
+                      {w.status}
+                    </span>
+                  </div>
+                  <div className="text-lg font-bold text-slate-800">{w.stock.toLocaleString()} units</div>
+                  <span className="text-[10px] text-sectext">Demand: {w.demand.toLocaleString()} units</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 flex items-center justify-between p-4 bg-lightblue rounded-xl border border-blue-100">
+              <div className="text-xs text-slate-700">
+                <span className="font-bold text-primaryblue">Recommendation:</span> Adding 500-600 buffer inventory units eliminates stockout risk during the 35-day supplier replenishment window.
+              </div>
+              <button
+                onClick={() => onSimulate({ ...assumptions, buffer_inventory_units: 600 })}
+                className="px-3 py-1.5 bg-primaryblue hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-2xs"
+              >
+                + Inject 600 Buffer Units
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PAGE 5: PRODUCTION AND OPERATIONS PLANNER
+    // =========================================================================
+    function ProductionOperationsPlanner({ result, onSimulate }) {
+      if (!result) return null;
+      const { operations, demand, assumptions } = result;
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-maintext">Production & Operations Capacity Planner</h2>
+              <p className="text-xs text-sectext mt-0.5">Machine uptime, single vs multi-shift modeling, scrap/rework rates, and equipment bottlenecks.</p>
+            </div>
+            <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+              operations.is_production_bottleneck ? 'bg-red-100 text-riskred' : 'bg-palemint text-posgreen'
+            }`}>
+              {operations.is_production_bottleneck ? 'Production Constrained' : 'Production Feasible'}
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Net Monthly Capacity</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{operations.total_production_capacity_units.toLocaleString()} units</div>
+              <span className="text-[11px] text-sectext font-medium">Shifts active: {operations.operating_shifts} shift(s)</span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Production Utilization</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{operations.production_utilization_pct}%</div>
+              <span className={`text-[11px] font-semibold ${operations.production_utilization_pct > 100 ? 'text-riskred' : 'text-posgreen'}`}>
+                {operations.production_utilization_pct > 100 ? `${operations.production_shortfall_units.toLocaleString()} units shortfall` : 'Headroom available'}
+              </span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Warehouse Logistics Cap</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{operations.warehouse_throughput_capacity_units.toLocaleString()} units</div>
+              <span className={`text-[11px] font-semibold ${operations.is_logistics_bottleneck ? 'text-riskred' : 'text-posgreen'}`}>
+                {operations.is_logistics_bottleneck ? 'Logistics overflow' : 'Throughput clear'}
+              </span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Dedicated Fleet Cap</span>
+              <div className="text-2xl font-bold text-maintext mt-1">{operations.logistics_carrier_capacity_units.toLocaleString()} units</div>
+              <span className="text-[11px] text-sectext font-medium">Base rate: $8.50/unit</span>
+            </div>
+          </div>
+
+          {/* Production Lines Breakdown */}
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h3 className="text-sm font-bold text-maintext mb-3">Manufacturing Cells & Line Uptime Breakdown</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="text-[11px] font-bold text-sectext uppercase border-b border-slate-100 pb-2">
+                  <tr>
+                    <th className="py-2">Line / Station Name</th>
+                    <th className="py-2 text-right">Dedicated SKU</th>
+                    <th className="py-2 text-right">1-Shift Rated Cap</th>
+                    <th className="py-2 text-right">Uptime %</th>
+                    <th className="py-2 text-right">Scrap Rate</th>
+                    <th className="py-2 text-right">Variable Cost</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  <tr>
+                    <td className="py-2.5 font-semibold text-maintext">Line A — Automated Servo Assembly</td>
+                    <td className="py-2.5 text-right font-mono text-slate-600">PRD-101</td>
+                    <td className="py-2.5 text-right font-bold text-slate-800">5,000 units</td>
+                    <td className="py-2.5 text-right text-posgreen">92.5%</td>
+                    <td className="py-2.5 text-right text-slate-600">1.8%</td>
+                    <td className="py-2.5 text-right">$14.50/u</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 font-semibold text-maintext">Line B — Precision CNC Valve Milling</td>
+                    <td className="py-2.5 text-right font-mono text-slate-600">PRD-102</td>
+                    <td className="py-2.5 text-right font-bold text-slate-800">3,900 units</td>
+                    <td className="py-2.5 text-right text-warnamber">89.0%</td>
+                    <td className="py-2.5 text-right text-slate-600">2.2%</td>
+                    <td className="py-2.5 text-right">$12.00/u</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 font-semibold text-maintext">Line C — SMT Electronics & PLC Build</td>
+                    <td className="py-2.5 text-right font-mono text-slate-600">PRD-103</td>
+                    <td className="py-2.5 text-right font-bold text-slate-800">2,300 units</td>
+                    <td className="py-2.5 text-right text-posgreen">95.0%</td>
+                    <td className="py-2.5 text-right text-slate-600">1.2%</td>
+                    <td className="py-2.5 text-right">$8.50/u</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div className="mt-6 flex items-center justify-between pt-4 border-t border-slate-100">
+              <span className="text-xs text-sectext">Currently running {operations.operating_shifts} shift. Want to add a 2nd shift?</span>
+              <button
+                onClick={() => onSimulate({ ...assumptions, additional_shifts: assumptions.additional_shifts === 0 ? 1 : 0 })}
+                className="px-3.5 py-1.5 bg-primaryblue hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-2xs"
+              >
+                {assumptions.additional_shifts === 0 ? '+ Enable 2nd Shift (+85% Capacity)' : 'Revert to 1 Shift'}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PAGE 6: FINANCIAL IMPACT ANALYSIS & WATERFALL BRIDGE
+    // =========================================================================
+    function FinancialImpactAnalysis({ result }) {
+      if (!result) return null;
+      const { finance, demand, operations, workforce } = result;
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-maintext">Financial Impact Analysis & Profit Bridge</h2>
+              <p className="text-xs text-sectext mt-0.5">Deterministic P&L comparison, Margin reconciliation, Working Capital requirements, and Profit Waterfall.</p>
+            </div>
+            <div className="text-right">
+              <span className="text-[10px] text-sectext uppercase font-bold tracking-wider">Incremental Profit</span>
+              <p className={`text-xl font-extrabold ${finance.incremental_operating_profit >= 0 ? 'text-posgreen' : 'text-riskred'}`}>
+                {finance.incremental_operating_profit >= 0 ? `+$${finance.incremental_operating_profit.toLocaleString()}` : `-$${Math.abs(finance.incremental_operating_profit).toLocaleString()}`}
+              </p>
+            </div>
+          </div>
+
+          {/* Side-by-Side Financial Statement */}
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h3 className="text-sm font-bold text-maintext mb-3">Baseline vs. Simulated P&L Statement (Monthly USD)</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="text-[11px] font-bold text-sectext uppercase border-b border-slate-100 pb-2">
+                  <tr>
+                    <th className="py-2">Line Item</th>
+                    <th className="py-2 text-right">Baseline (10k units)</th>
+                    <th className="py-2 text-right">Simulated Scenario</th>
+                    <th className="py-2 text-right">Variance ($)</th>
+                    <th className="py-2 text-right">Variance (%)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 font-medium">
+                  <tr>
+                    <td className="py-2.5 font-bold text-maintext">Net Revenue</td>
+                    <td className="py-2.5 text-right">${finance.baseline_revenue.toLocaleString()}</td>
+                    <td className="py-2.5 text-right font-bold text-primaryblue">${finance.simulated_revenue.toLocaleString()}</td>
+                    <td className="py-2.5 text-right text-posgreen">+${(finance.simulated_revenue - finance.baseline_revenue).toLocaleString()}</td>
+                    <td className="py-2.5 text-right font-semibold text-posgreen">+{finance.revenue_growth_pct}%</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 text-slate-700">Cost of Goods Sold (COGS)</td>
+                    <td className="py-2.5 text-right">${finance.baseline_cogs.toLocaleString()}</td>
+                    <td className="py-2.5 text-right font-semibold text-slate-800">${finance.simulated_cogs.toLocaleString()}</td>
+                    <td className="py-2.5 text-right text-riskred">+${(finance.simulated_cogs - finance.baseline_cogs).toLocaleString()}</td>
+                    <td className="py-2.5 text-right font-semibold text-riskred">+{finance.cogs_growth_pct}%</td>
+                  </tr>
+                  <tr className="bg-slate-50/50 font-bold">
+                    <td className="py-2.5 text-maintext">Gross Profit</td>
+                    <td className="py-2.5 text-right">${finance.baseline_gross_profit.toLocaleString()}</td>
+                    <td className="py-2.5 text-right text-primaryblue">${finance.simulated_gross_profit.toLocaleString()}</td>
+                    <td className="py-2.5 text-right text-posgreen">+${(finance.simulated_gross_profit - finance.baseline_gross_profit).toLocaleString()}</td>
+                    <td className="py-2.5 text-right text-posgreen">{finance.gross_margin_pct}% margin</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 text-sectext pl-4">• Direct Standard Labor</td>
+                    <td className="py-2 text-right text-slate-500">$213,200</td>
+                    <td className="py-2 text-right text-slate-700">${finance.direct_labor_cost.toLocaleString()}</td>
+                    <td className="py-2 text-right text-slate-500">-</td>
+                    <td className="py-2 text-right text-slate-500">-</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 text-sectext pl-4">• Overtime Wage Premium</td>
+                    <td className="py-2 text-right text-slate-500">$0</td>
+                    <td className="py-2 text-right text-riskred font-semibold">${finance.overtime_premium_cost.toLocaleString()}</td>
+                    <td className="py-2 text-right text-riskred">+${finance.overtime_premium_cost.toLocaleString()}</td>
+                    <td className="py-2 text-right text-riskred">OT Penalty</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 text-sectext pl-4">• Freight & 3PL Logistics</td>
+                    <td className="py-2 text-right text-slate-500">$85,000</td>
+                    <td className="py-2 text-right text-slate-700 font-semibold">${finance.logistics_freight_cost.toLocaleString()}</td>
+                    <td className="py-2 text-right text-riskred">+${(finance.logistics_freight_cost - 85000).toLocaleString()}</td>
+                    <td className="py-2 text-right text-slate-500">-</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 text-sectext pl-4">• Inventory Carrying Cost</td>
+                    <td className="py-2 text-right text-slate-500">$34,800</td>
+                    <td className="py-2 text-right text-slate-700 font-semibold">${finance.inventory_carrying_cost.toLocaleString()}</td>
+                    <td className="py-2 text-right text-riskred">+${(finance.inventory_carrying_cost - 34800).toLocaleString()}</td>
+                    <td className="py-2 text-right text-slate-500">-</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2.5 text-slate-700">Total Operating Expenses (OpEx)</td>
+                    <td className="py-2.5 text-right">${finance.baseline_operating_expenses.toLocaleString()}</td>
+                    <td className="py-2.5 text-right font-semibold text-slate-800">${finance.simulated_operating_expenses.toLocaleString()}</td>
+                    <td className="py-2.5 text-right text-riskred">+${(finance.simulated_operating_expenses - finance.baseline_operating_expenses).toLocaleString()}</td>
+                    <td className="py-2.5 text-right font-semibold text-riskred">+{( (finance.simulated_operating_expenses - finance.baseline_operating_expenses)/finance.baseline_operating_expenses * 100).toFixed(1)}%</td>
+                  </tr>
+                  <tr className="bg-blue-50/70 text-sm font-extrabold border-t-2 border-primaryblue">
+                    <td className="py-3 text-maintext">Operating Profit (EBIT)</td>
+                    <td className="py-3 text-right">${finance.baseline_operating_profit.toLocaleString()}</td>
+                    <td className="py-3 text-right text-primaryblue">${finance.simulated_operating_profit.toLocaleString()}</td>
+                    <td className="py-3 text-right text-posgreen">+${finance.incremental_operating_profit.toLocaleString()}</td>
+                    <td className="py-3 text-right text-primaryblue">{finance.operating_margin_pct}% margin</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Profit Bridge Waterfall Steps */}
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <h3 className="text-sm font-bold text-maintext mb-1">Profit Bridge (Why Operating Profit Changes)</h3>
+            <p className="text-xs text-sectext mb-4">Reconciles baseline EBIT ($269,400) to simulated EBIT (${finance.simulated_operating_profit.toLocaleString()}).</p>
+
+            <div className="space-y-2.5">
+              {finance.profit_bridge.map((step, i) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 text-xs">
+                  <div className="flex items-center space-x-3">
+                    <span className="w-5 h-5 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-[10px]">{i + 1}</span>
+                    <span className="font-semibold text-maintext">{step.step}</span>
+                  </div>
+                  <span className={`font-mono font-bold text-xs ${
+                    step.amount >= 0 ? (step.type === 'total' ? 'text-primaryblue font-extrabold text-sm' : 'text-posgreen') : 'text-riskred'
+                  }`}>
+                    {step.amount >= 0 ? `+$${step.amount.toLocaleString()}` : `-$${Math.abs(step.amount).toLocaleString()}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Working Capital & Cash Balance */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Incremental Working Capital</span>
+              <div className="text-xl font-bold text-maintext mt-1">${finance.incremental_working_capital.toLocaleString()}</div>
+              <span className="text-[10px] text-sectext">Accounts Receivable + Inventory - Accounts Payable</span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Capex Equipment / Tooling</span>
+              <div className="text-xl font-bold text-maintext mt-1">${finance.capital_expenditure_capex.toLocaleString()}</div>
+              <span className="text-[10px] text-sectext">Shift tooling & machine expansion</span>
+            </div>
+
+            <div className="bg-appcard p-4 rounded-xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-sectext font-medium">Total Cash Required</span>
+              <div className="text-xl font-bold text-primaryblue mt-1">${finance.total_cash_required.toLocaleString()}</div>
+              <span className="text-[10px] text-posgreen font-semibold">Available Budget: ${finance.capital_budget_surplus_or_deficit.toLocaleString()} remaining</span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PAGE 7: SCENARIO COMPARISON (SIDE-BY-SIDE MATRIX)
+    // =========================================================================
+    function ScenarioComparisonView({ onSelect }) {
+      const [comparisonData, setComparisonData] = useState([]);
+      const [loading, setLoading] = useState(true);
+
+      useEffect(() => {
+        loadComparison();
+      }, []);
+
+      const loadComparison = async () => {
+        setLoading(true);
+        try {
+          const res = await API.compareScenarios(["scen-status-quo", "scen-tactical-overtime", "scen-shift-expansion", "scen-hybrid-optimized"]);
+          setComparisonData(res);
+        } catch (err) {
+          console.error("Comparison load error:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      if (loading) {
+        return (
+          <div className="flex items-center justify-center h-64">
+            <div className="w-8 h-8 border-4 border-primaryblue border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        );
+      }
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-maintext">Simultaneous Multi-Scenario Comparison</h2>
+              <p className="text-xs text-sectext mt-0.5">Evaluate trade-offs between 4 core strategic pathways under 20% sales growth demand.</p>
+            </div>
+            <button
+              onClick={loadComparison}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg"
+            >
+              Refresh Matrix
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {comparisonData.map((scen, idx) => (
+              <div 
+                key={scen.scenario_id}
+                className={`bg-appcard rounded-2xl p-5 border shadow-sm flex flex-col justify-between transition-all ${
+                  scen.is_feasible ? 'border-blue-200 ring-2 ring-blue-500/10' : 'border-slate-200'
+                }`}
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-[10px] font-bold text-sectext uppercase tracking-wider">Option {String.fromCharCode(65 + idx)}</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                      scen.is_feasible ? 'bg-palemint text-posgreen' : 'bg-red-50 text-riskred'
+                    }`}>
+                      {scen.is_feasible ? 'FEASIBLE' : 'INFEASIBLE'}
+                    </span>
+                  </div>
+
+                  <h3 className="font-bold text-sm text-maintext mb-1 leading-tight">{scen.assumptions.name}</h3>
+                  <p className="text-[11px] text-sectext mb-4 line-clamp-2">{scen.assumptions.description}</p>
+
+                  <div className="space-y-3 py-3 border-y border-slate-100 text-xs">
+                    <div className="flex justify-between">
+                      <span className="text-sectext">Achievable Units</span>
+                      <span className="font-bold text-slate-800">{scen.operations.achievable_units.toLocaleString()} / {scen.demand.simulated_total_units.toLocaleString()}</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-sectext">Primary Bottleneck</span>
+                      <span className={`font-semibold text-right ${scen.is_feasible ? 'text-posgreen' : 'text-riskred'}`}>
+                        {scen.operations.binding_constraint}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-sectext">Net Revenue</span>
+                      <span className="font-bold text-slate-800">${(scen.finance.simulated_revenue / 1000).toFixed(1)}k</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-sectext">Incremental EBIT</span>
+                      <span className={`font-bold ${scen.finance.incremental_operating_profit >= 0 ? 'text-posgreen' : 'text-riskred'}`}>
+                        {scen.finance.incremental_operating_profit >= 0 ? `+$${(scen.finance.incremental_operating_profit / 1000).toFixed(1)}k` : `-$${(Math.abs(scen.finance.incremental_operating_profit) / 1000).toFixed(1)}k`}
+                      </span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-sectext">Cash Requirement</span>
+                      <span className="font-bold text-slate-700">${(scen.finance.total_cash_required / 1000).toFixed(1)}k</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-sectext">Operational Risk</span>
+                      <span className="font-bold text-slate-700">{scen.risk.overall_risk_score}/10 ({scen.risk.risk_level})</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 pt-3">
+                  <button
+                    onClick={() => onSelect(scen.scenario_id)}
+                    className="w-full py-2 bg-slate-100 hover:bg-primaryblue hover:text-white text-slate-700 text-xs font-semibold rounded-xl transition-all"
+                  >
+                    Select & Inspect Details
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PAGE 8: AI SCENARIO COPILOT (CONVERSATIONAL GROUNDED INTELLIGENCE)
+    // =========================================================================
+    function AICopilotView({ activeResult }) {
+      const [messages, setMessages] = useState([
+        {
+          sender: 'assistant',
+          text: `Welcome to the SIMULATE.AI Scenario Copilot. I am your strategic decision advisor, grounded directly in the deterministic simulation of "${activeResult?.assumptions?.name || 'Active Scenario'}". Ask me any operational or financial question!`,
+          binding_constraint: activeResult?.operations?.binding_constraint,
+          recommendations: [
+            "Ask about binding bottlenecks",
+            "Ask why profit grows slower than revenue",
+            "Ask whether hiring or overtime is preferable"
+          ]
+        }
+      ]);
+      const [input, setInput] = useState('');
+      const [copilotLoading, setCopilotLoading] = useState(false);
+      const messagesEndRef = useRef(null);
+
+      const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      };
+
+      useEffect(() => {
+        scrollToBottom();
+      }, [messages]);
+
+      const handleSend = async (queryText) => {
+        const text = queryText || input;
+        if (!text.trim()) return;
+
+        const newMsg = { sender: 'user', text };
+        setMessages(prev => [...prev, newMsg]);
+        setInput('');
+        setCopilotLoading(true);
+
+        try {
+          const resp = await API.queryCopilot(text, activeResult?.scenario_id);
+          setMessages(prev => [...prev, {
+            sender: 'assistant',
+            text: resp.answer,
+            binding_constraint: resp.binding_constraint,
+            tradeoffs: resp.key_tradeoffs,
+            recommendations: resp.actionable_recommendations,
+            source: resp.source
+          }]);
+        } catch (err) {
+          console.error("Copilot error:", err);
+          setMessages(prev => [...prev, {
+            sender: 'assistant',
+            text: "Could not retrieve copilot response. Falling back to deterministic summary.",
+            source: "offline-fallback"
+          }]);
+        } finally {
+          setCopilotLoading(false);
+        }
+      };
+
+      const suggestedPrompts = [
+        "Can we achieve 20% sales growth without hiring?",
+        "Which resource becomes the first bottleneck?",
+        "Why does profit grow more slowly than revenue?",
+        "Compare hiring with overtime.",
+        "How much extra working capital will we need?",
+        "What if demand increases by 30%?"
+      ];
+
+      return (
+        <div className="h-[calc(100vh-130px)] flex flex-col bg-appcard rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+          {/* Header */}
+          <div className="p-4 border-b border-slate-200 bg-slate-50/70 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-primaryblue to-appteal flex items-center justify-center text-white font-bold shadow-xs">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-bold text-maintext">AI Strategic Scenario Copilot</h3>
+                <p className="text-[11px] text-sectext">Grounded in verified simulation outputs for: <span className="font-semibold text-primaryblue">{activeResult?.assumptions?.name}</span></p>
+              </div>
+            </div>
+            <span className="text-[10px] font-semibold bg-palemint text-posgreen px-2.5 py-1 rounded-full border border-green-200">
+              Zero Arithmetic Fabrication Mode
+            </span>
+          </div>
+
+          {/* Chat Messages */}
+          <div className="flex-1 overflow-y-auto p-5 space-y-4 custom-scrollbar bg-slate-50/30">
+            {messages.map((m, i) => (
+              <div key={i} className={`flex ${m.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-2xl rounded-2xl p-4 shadow-2xs text-xs leading-relaxed ${
+                  m.sender === 'user' 
+                    ? 'bg-primaryblue text-white rounded-br-none' 
+                    : 'bg-white text-maintext border border-slate-200 rounded-bl-none'
+                }`}>
+                  <div className="font-sans whitespace-pre-line">{m.text}</div>
+
+                  {m.binding_constraint && (
+                    <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center space-x-1.5 text-[11px]">
+                      <span className="font-bold text-sectext">Binding Constraint:</span>
+                      <span className="font-semibold text-riskred">{m.binding_constraint}</span>
+                    </div>
+                  )}
+
+                  {m.tradeoffs && m.tradeoffs.length > 0 && (
+                    <div className="mt-2.5 pt-2 border-t border-slate-100">
+                      <span className="font-bold text-[11px] text-slate-700 block mb-1">Key Strategic Trade-offs:</span>
+                      <ul className="list-disc pl-4 space-y-0.5 text-slate-600 text-[11px]">
+                        {m.tradeoffs.map((t, tidx) => <li key={tidx}>{t}</li>)}
+                      </ul>
+                    </div>
+                  )}
+
+                  {m.recommendations && m.recommendations.length > 0 && (
+                    <div className="mt-2.5 pt-2 border-t border-slate-100">
+                      <span className="font-bold text-[11px] text-primaryblue block mb-1">Actionable Recommendations:</span>
+                      <ul className="list-disc pl-4 space-y-0.5 text-slate-600 text-[11px]">
+                        {m.recommendations.map((r, ridx) => <li key={ridx}>{r}</li>)}
+                      </ul>
+                    </div>
+                  )}
+
+                  {m.source && (
+                    <span className="block mt-2 text-[9px] text-slate-400 font-mono text-right">
+                      Source: {m.source}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ))}
+            {copilotLoading && (
+              <div className="flex justify-start">
+                <div className="bg-white p-3 rounded-2xl border border-slate-200 shadow-2xs flex items-center space-x-2 text-xs text-sectext">
+                  <div className="w-4 h-4 border-2 border-primaryblue border-t-transparent rounded-full animate-spin"></div>
+                  <span>Analyzing simulation trade-offs...</span>
+                </div>
+              </div>
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Quick Prompts Bar */}
+          <div className="p-3 bg-white border-t border-slate-100 flex items-center space-x-2 overflow-x-auto custom-scrollbar">
+            <span className="text-[10px] font-bold text-sectext flex-shrink-0">Suggested Questions:</span>
+            {suggestedPrompts.map((p, idx) => (
+              <button
+                key={idx}
+                onClick={() => handleSend(p)}
+                className="px-2.5 py-1 bg-slate-50 hover:bg-lightblue hover:text-primaryblue border border-slate-200 text-slate-600 text-[11px] font-medium rounded-lg whitespace-nowrap transition-colors"
+              >
+                {p}
+              </button>
+            ))}
+          </div>
+
+          {/* Input Box */}
+          <form 
+            onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+            className="p-3 bg-appcard border-t border-slate-200 flex items-center space-x-2"
+          >
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="Ask about bottlenecks, financial trade-offs, hiring vs overtime, or risk..."
+              className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-maintext focus:outline-none focus:ring-2 focus:ring-primaryblue"
+            />
+            <button
+              type="submit"
+              disabled={copilotLoading || !input.trim()}
+              className="px-4 py-2.5 bg-primaryblue hover:bg-blue-700 disabled:opacity-50 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center space-x-1"
+            >
+              <span>Ask</span>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </button>
+          </form>
+        </div>
+      );
+    }
+
+    // =========================================================================
+    // PAGE 9: SIMULATION REPORTS AND DATA HUB
+    // =========================================================================
+    function ReportsDataHub({ metadata, dataQuality, activeResult, onReset }) {
+      const [exporting, setExporting] = useState(false);
+      const [exportData, setExportData] = useState(null);
+
+      const handleExport = async () => {
+        if (!activeResult) return;
+        setExporting(true);
+        try {
+          const rep = await API.exportScenario(activeResult.scenario_id);
+          setExportData(rep);
+        } catch (err) {
+          console.error("Export error:", err);
+        } finally {
+          setExporting(false);
+        }
+      };
+
+      const downloadJson = () => {
+        if (!exportData) return;
+        const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `SIMULATE_AI_${activeResult.scenario_id}.json`;
+        a.click();
+      };
+
+      return (
+        <div className="space-y-6">
+          <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-maintext">Simulation Reports, Data Ingestion & Governance Hub</h2>
+              <p className="text-xs text-sectext mt-0.5">Manage data sources, inspect schema audit scores, export executive reports, and review integration status.</p>
+            </div>
+            <button
+              onClick={handleExport}
+              className="px-4 py-2 bg-primaryblue hover:bg-blue-700 text-white text-xs font-bold rounded-xl shadow-xs transition-all flex items-center space-x-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+              <span>Generate Audit Report</span>
+            </button>
+          </div>
+
+          {/* Data Quality Report Card */}
+          {dataQuality && (
+            <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-maintext">Agent 2 — Data Quality & Integrity Report</h3>
+                  <p className="text-xs text-sectext">Pre-flight validation across {dataQuality.total_records_checked} fields in all 6 departmental tables.</p>
+                </div>
+                <span className={`text-base font-extrabold px-3 py-1 rounded-xl ${
+                  dataQuality.overall_score_pct >= 90 ? 'bg-palemint text-posgreen' : 'bg-amber-100 text-warnamber'
+                }`}>
+                  {dataQuality.overall_score_pct}% Overall Score
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                  <span className="text-sectext block">Completeness</span>
+                  <span className="text-lg font-bold text-posgreen">{dataQuality.completeness_score_pct}%</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                  <span className="text-sectext block">Validity</span>
+                  <span className="text-lg font-bold text-posgreen">{dataQuality.validity_score_pct}%</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                  <span className="text-sectext block">Consistency</span>
+                  <span className="text-lg font-bold text-posgreen">{dataQuality.consistency_score_pct}%</span>
+                </div>
+                <div className="p-3 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                  <span className="text-sectext block">Referential Integrity</span>
+                  <span className="text-lg font-bold text-posgreen">{dataQuality.integrity_score_pct}%</span>
+                </div>
+              </div>
+
+              <div className="p-4 bg-slate-50 rounded-xl border border-slate-100 text-xs text-slate-700">
+                <span className="font-bold text-maintext block mb-1">Quality Assessment Summary:</span>
+                {dataQuality.suggested_corrections.map((s, i) => (
+                  <p key={i} className="text-slate-600 mt-0.5">• {s}</p>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Integration Status & Connectors */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+              <h3 className="text-sm font-bold text-maintext mb-2">Live Enterprise Connectors</h3>
+              <p className="text-xs text-sectext mb-4">Configurable connectors for real-time ERP, CRM, HRIS, and WMS data.</p>
+
+              <div className="space-y-3">
+                {[
+                  { name: 'SAP S/4HANA & Oracle ERP', status: 'Not Connected', desc: 'Syncs live COGS, material costs, and invoices.' },
+                  { name: 'Salesforce & HubSpot CRM', status: 'Not Connected', desc: 'Ingests pipeline conversions and regional demand forecasts.' },
+                  { name: 'Workday HRIS', status: 'Not Connected', desc: 'Extracts real-time headcount, wages, and shift logs.' },
+                  { name: 'Manhattan WMS Logistics', status: 'Not Connected', desc: 'Monitors warehouse throughput and fleet availability.' }
+                ].map((c, i) => (
+                  <div key={i} className="p-3 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
+                    <div>
+                      <span className="text-xs font-bold text-maintext block">{c.name}</span>
+                      <span className="text-[10px] text-sectext">{c.desc}</span>
+                    </div>
+                    <span className="text-[10px] font-semibold text-slate-500 bg-slate-200 px-2.5 py-1 rounded-md">
+                      {c.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Data Source Mode & Audit Reset */}
+            <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-maintext mb-2">Active Data Mode</h3>
+                <p className="text-xs text-sectext mb-4">Currently running in transparent demonstration mode with NovaManufacturing Ltd.</p>
+
+                <div className="p-4 bg-lightblue rounded-xl border border-blue-100 mb-4">
+                  <div className="flex items-center space-x-2 text-xs font-bold text-primaryblue mb-1">
+                    <span className="w-2 h-2 rounded-full bg-primaryblue"></span>
+                    <span>Synthetic Demonstration Data</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 leading-relaxed">
+                    Connected datasets: 3 precision products, 24 months historical demand, 42 employees across 3 departments, 3 production lines, and verified financial P&L.
+                  </p>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between">
+                <span className="text-xs text-sectext">Restore original demonstration state:</span>
+                <button
+                  onClick={onReset}
+                  className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition-all"
+                >
+                  Reset All Scenarios
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Export Report Modal/View if generated */}
+          {exportData && (
+            <div className="bg-appcard rounded-2xl p-6 border border-slate-200 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-sm font-bold text-maintext">{exportData.report_title}</h3>
+                  <p className="text-xs text-sectext">Generated at: {exportData.generation_timestamp}</p>
+                </div>
+                <button
+                  onClick={downloadJson}
+                  className="px-3.5 py-1.5 bg-primaryblue hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-2xs flex items-center space-x-1.5"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span>Download JSON Report</span>
+                </button>
+              </div>
+              <pre className="bg-slate-50 p-4 rounded-xl border border-slate-100 text-[11px] font-mono text-slate-700 overflow-x-auto max-h-60 custom-scrollbar">
+                {JSON.stringify(exportData, null, 2)}
+              </pre>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Render App to DOM
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
